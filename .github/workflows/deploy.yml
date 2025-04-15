@@ -35,15 +35,23 @@ jobs:
 
       - name: Create and deploy backend package
         run: |
+          # Create S3 bucket if it doesn't exist
+          aws s3api create-bucket \
+            --bucket launch-artifacts \
+            --region ${{ env.AWS_REGION }} \
+            --create-bucket-configuration LocationConstraint=${{ env.AWS_REGION }} || true
+          
+          # Wait for bucket to be available
+          aws s3api wait bucket-exists --bucket launch-artifacts
+          
           # Create deployment package with only necessary files
-          zip -r deploy.zip \
+          zip deploy.zip \
             app.py \
             requirements.txt \
             gunicorn.conf.py \
-            gunicorn.service \
-            -x "*.git*" "*.github*" "frontend/*" "docs/*" ".cursor/*" "aws/*" "scripts/*" "iam/*"
+            gunicorn.service
           
-          # Upload using AWS CLI and Session Manager
+          # Upload using AWS CLI
           aws s3 cp deploy.zip s3://launch-artifacts/backend-deploy.zip
           
           # Deploy using SSM
@@ -95,7 +103,7 @@ jobs:
             "name": "launch-frontend",
             "version": "1.0.0",
             "scripts": {
-              "build": "echo 'No build script defined'"
+              "build": "mkdir -p dist && echo 'Build placeholder' > dist/index.html"
             }
           }
           EOFMARKER
@@ -104,16 +112,22 @@ jobs:
 
       - name: Deploy frontend
         run: |
-          # Ensure dist directory exists
-          mkdir -p frontend/dist
+          # Create S3 bucket if it doesn't exist
+          aws s3api create-bucket \
+            --bucket launch-artifacts \
+            --region ${{ env.AWS_REGION }} \
+            --create-bucket-configuration LocationConstraint=${{ env.AWS_REGION }} || true
+          
+          # Wait for bucket to be available
+          aws s3api wait bucket-exists --bucket launch-artifacts
           
           # Create deployment package
           cp frontend/nginx/default.conf frontend/dist/
           cd frontend/dist
-          zip -r ../../deploy.zip *
+          zip -r ../../deploy.zip .
           cd ../..
           
-          # Upload using AWS CLI and Session Manager
+          # Upload using AWS CLI
           aws s3 cp deploy.zip s3://launch-artifacts/frontend-deploy.zip
           
           # Deploy using SSM
