@@ -100,8 +100,8 @@ jobs:
       - name: Deploy to frontend instance
         run: |
           # Create deployment package including nginx config
-          cp frontend/nginx/default.conf frontend/build/
-          cd frontend/build
+          cp frontend/nginx/default.conf frontend/dist/
+          cd frontend/dist
           zip -r ../../deploy.zip *
           cd ../..
           
