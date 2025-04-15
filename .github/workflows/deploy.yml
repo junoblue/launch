@@ -1,265 +1,87 @@
-name: Deploy Launch Application
+name: Deploy Application
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
-
-permissions:
-  id-token: write
-  contents: read
-
-env:
-  AWS_REGION: us-west-2
-  FRONTEND_INSTANCE_ID: i-04474421d6a28163d
-  BACKEND_INSTANCE_ID: i-0a374e25291d206aa
 
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-
+          python-version: '3.10'
+          
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::597088015766:role/launch-github-actions-role
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Create backend deployment package
-        working-directory: backend
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-west-2
+          
+      - name: Create and upload backend package
         run: |
-          echo "Creating database configuration..."
-          mkdir -p config scripts
-          cat > config/database.py << 'EOF'
-          import os
-          import json
-          import boto3
-          from botocore.exceptions import ClientError
-          from dotenv import load_dotenv
-
-          # Load environment variables
-          load_dotenv()
-
-          def get_secret():
-              secret_name = "/launch/db/credentials"
-              region_name = "us-west-2"
-
-              session = boto3.session.Session()
-              client = session.client(
-                  service_name='secretsmanager',
-                  region_name=region_name
-              )
-
-              try:
-                  get_secret_value_response = client.get_secret_value(
-                      SecretId=secret_name
-                  )
-              except ClientError as e:
-                  raise e
-              else:
-                  if 'SecretString' in get_secret_value_response:
-                      secret = json.loads(get_secret_value_response['SecretString'])
-                      return secret
-
-          # Database Configuration
-          DB_CONFIG = {
-              'host': 'launch-rds-main.cr4cyac0cdfd.us-west-2.rds.amazonaws.com',
-              'port': 5432,
-              'database': 'postgres',  # Will be updated from secrets
-              'pool_size': 10,
-              'max_overflow': 90,  # To reach max of 100 connections
-              'pool_timeout': 30,  # 30 seconds
-              'pool_recycle': 1800,  # 30 minutes
-              'pool_pre_ping': True,
-          }
-
-          # Update with credentials from Secrets Manager
-          try:
-              secrets = get_secret()
-              DB_CONFIG.update({
-                  'username': secrets['username'],
-                  'password': secrets['password'],
-                  'database': secrets.get('dbname', 'postgres')
-              })
-          except Exception as e:
-              print(f"Error fetching database credentials: {e}")
-              raise
-
-          # SQLAlchemy connection string
-          def get_database_url():
-              return f"postgresql://{DB_CONFIG['username']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
-          EOF
-
-          cat > scripts/test_db_connection.py << 'EOF'
-          from sqlalchemy import create_engine, text
-          import sys
-          sys.path.append('.')
-          from config.database import get_database_url
-
-          def test_connection():
-              try:
-                  # Create engine with connection pooling
-                  engine = create_engine(
-                      get_database_url(),
-                      pool_size=10,
-                      max_overflow=90,
-                      pool_timeout=30,
-                      pool_recycle=1800,
-                      pool_pre_ping=True
-                  )
-                  
-                  # Test connection
-                  with engine.connect() as conn:
-                      result = conn.execute(text("SELECT version()"))
-                      version = result.scalar()
-                      print(f"Successfully connected to database. PostgreSQL version: {version}")
-                      
-                      # Test connection pooling
-                      print("Testing connection pool...")
-                      for i in range(5):
-                          conn.execute(text("SELECT 1"))
-                      print("Connection pool test successful")
-                      
-              except Exception as e:
-                  print(f"Error connecting to database: {e}")
-                  sys.exit(1)
-
-          if __name__ == "__main__":
-              test_connection()
-          EOF
-
-          echo "Creating backend deployment package..."
-          zip -r ../backend-deploy.zip . -x "*.git*" "*.pytest_cache*" "__pycache__/*" "*.pyc"
-          echo "Deployment package created successfully"
-
-      - name: Upload backend package to S3
+          cd backend
+          zip -r ../backend-deploy.zip . -x "*.pyc" "__pycache__/*"
+          cd ..
+          aws s3 cp backend-deploy.zip s3://launch-artifacts/
+          
+      - name: Deploy backend
         run: |
-          echo "Uploading backend package to S3..."
-          aws s3 cp backend-deploy.zip s3://launch-artifacts/backend-deploy.zip
-          echo "Upload completed successfully"
-
-      - name: Deploy backend using SSM
-        run: |
-          echo "Deploying backend via SSM..."
           aws ssm send-command \
-            --instance-ids "${{ env.BACKEND_INSTANCE_ID }}" \
+            --instance-ids ${{ secrets.BACKEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters '{
-              "commands": [
-                "echo \"Starting backend deployment...\"",
-                "sudo apt-get update",
-                "sudo apt-get install -y postgresql-client libpq-dev",
-                "aws s3 cp s3://launch-artifacts/backend-deploy.zip /tmp/backend-deploy.zip",
-                "sudo mkdir -p /opt/launch/backend",
-                "sudo rm -rf /opt/launch/backend/*",
-                "cd /opt/launch/backend",
-                "sudo unzip -o /tmp/backend-deploy.zip -d .",
-                "sudo chown -R ubuntu:ubuntu /opt/launch/backend",
-                "sudo systemctl stop gunicorn || true",
-                "sudo python3 -m pip install --upgrade pip",
-                "sudo python3 -m pip install -r requirements.txt psycopg2-binary sqlalchemy asyncpg python-dotenv boto3 aws-secretsmanager-caching",
-                "python3 scripts/test_db_connection.py",
-                "sudo cp gunicorn.service /etc/systemd/system/",
-                "sudo systemctl daemon-reload",
-                "sudo systemctl enable gunicorn",
-                "sudo systemctl start gunicorn",
-                "echo \"Waiting for service to start...\"",
-                "sleep 5",
-                "if sudo systemctl is-active --quiet gunicorn; then echo \"Deployment successful\"; else echo \"Deployment failed\" >&2; exit 1; fi"
-              ]
-            }'
-          echo "Backend deployment completed"
+            --parameters 'commands=[
+              "cd /opt/launch",
+              "aws s3 cp s3://launch-artifacts/backend-deploy.zip .",
+              "sudo systemctl stop gunicorn",
+              "sudo rm -rf backend/*",
+              "sudo unzip -o backend-deploy.zip -d backend/",
+              "cd backend",
+              "python -m pip install --upgrade pip",
+              "pip install -r requirements.txt",
+              "sudo systemctl daemon-reload",
+              "sudo systemctl start gunicorn",
+              "python scripts/test_db_connection.py"
+            ]'
 
   deploy-frontend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
+      
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-
+          
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::597088015766:role/launch-github-actions-role
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Build frontend
-        working-directory: frontend
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-west-2
+          
+      - name: Install dependencies and build
         run: |
-          echo "Setting up frontend build..."
-          cat > package.json << 'EOF'
-          {
-            "name": "launch-frontend",
-            "version": "1.0.0",
-            "scripts": {
-              "build": "mkdir -p dist && echo 'Build placeholder' > dist/index.html"
-            }
-          }
-          EOF
-          echo "Installing dependencies..."
+          cd frontend
           npm install --force
-          echo "Building frontend..."
           npm run build
-          echo "Frontend build completed"
-
-      - name: Create frontend deployment package
-        working-directory: frontend
+          zip -r ../frontend-deploy.zip dist
+          
+      - name: Upload and deploy frontend
         run: |
-          echo "Creating frontend deployment package..."
-          cp nginx/default.conf dist/
-          cd dist
-          zip -r ../../frontend-deploy.zip .
-          echo "Deployment package created successfully"
-
-      - name: Upload frontend package to S3
-        run: |
-          echo "Uploading frontend package to S3..."
-          aws s3 cp frontend-deploy.zip s3://launch-artifacts/frontend-deploy.zip
-          echo "Upload completed successfully"
-
-      - name: Deploy frontend using SSM
-        run: |
-          echo "Deploying frontend via SSM..."
+          aws s3 cp frontend-deploy.zip s3://launch-artifacts/
           aws ssm send-command \
-            --instance-ids "${{ env.FRONTEND_INSTANCE_ID }}" \
+            --instance-ids ${{ secrets.FRONTEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters '{
-              "commands": [
-                "echo \"Starting frontend deployment...\"",
-                "aws s3 cp s3://launch-artifacts/frontend-deploy.zip /tmp/frontend-deploy.zip",
-                "sudo mkdir -p /opt/launch/frontend",
-                "sudo rm -rf /opt/launch/frontend/*",
-                "cd /opt/launch/frontend",
-                "sudo unzip -o /tmp/frontend-deploy.zip -d .",
-                "sudo cp default.conf /etc/nginx/sites-available/default",
-                "sudo rm -f default.conf",
-                "sudo chown -R ubuntu:ubuntu /opt/launch/frontend",
-                "sudo nginx -t",
-                "if sudo nginx -t; then",
-                "  sudo systemctl reload nginx || sudo systemctl restart nginx",
-                "  echo \"Waiting for nginx to start...\"",
-                "  sleep 5",
-                "  if curl -s http://localhost/health | grep -q \"healthy\"; then",
-                "    echo \"Deployment successful\"",
-                "  else",
-                "    echo \"Health check failed\" >&2",
-                "    exit 1",
-                "  fi",
-                "else",
-                "  echo \"Nginx configuration test failed\" >&2",
-                "  exit 1",
-                "fi"
-              ]
-            }'
-          echo "Frontend deployment completed" 
+            --parameters 'commands=[
+              "cd /opt/launch",
+              "aws s3 cp s3://launch-artifacts/frontend-deploy.zip .",
+              "sudo systemctl stop nginx",
+              "sudo rm -rf frontend/*",
+              "sudo unzip -o frontend-deploy.zip -d frontend/",
+              "sudo mv frontend/dist/* frontend/",
+              "sudo rm -rf frontend/dist",
+              "sudo systemctl start nginx"
+            ]' 
