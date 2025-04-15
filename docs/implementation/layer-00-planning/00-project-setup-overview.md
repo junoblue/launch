@@ -8,8 +8,8 @@ Building a comprehensive multi-tenant SaaS platform integrating e-commerce, CRM,
 ### 1. Infrastructure Layer
 - **AWS Cloud Infrastructure**
   - VPC design with public/private subnets
-  - Multi-AZ deployment
-  - Auto-scaling configuration
+  - Single-AZ deployment for POC phase
+  - Cost-optimized instance selection
   - Load balancer setup
   - Security group architecture
 
@@ -22,11 +22,11 @@ Building a comprehensive multi-tenant SaaS platform integrating e-commerce, CRM,
 
 ### 2. Data Layer
 - **Multi-tenant Database Strategy**
-  - PostgreSQL for relational data
+  - PostgreSQL for relational data (t4g.medium for POC)
   - Schema-per-tenant approach
   - Connection pooling
   - Query optimization
-  - Backup strategies
+  - Basic backup strategy for POC
 
 - **Caching Layer**
   - Redis implementation
