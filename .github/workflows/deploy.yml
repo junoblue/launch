@@ -60,6 +60,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
+          fetch-depth: 0
+      
+      - name: Debug checkout
+        run: |
+          echo "Current ref: ${{ github.ref }}"
+          git status
+          git branch
+          echo "Listing workspace contents:"
+          ls -la
+          echo "Listing frontend contents:"
+          ls -la frontend/
       
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -74,17 +85,19 @@ jobs:
           
       - name: Clean up and validate
         run: |
-          # Print current directory for debugging
-          pwd
+          echo "Current working directory: $(pwd)"
+          echo "Workspace contents:"
           ls -la
+          echo "Frontend directory contents:"
+          ls -la frontend/
           
-          # Validate frontend directory
           if [ ! -d "frontend" ]; then
             echo "Error: frontend directory not found"
             exit 1
           fi
           if [ ! -f "frontend/package.json" ]; then
             echo "Error: package.json not found in frontend directory"
+            ls -la frontend/
             exit 1
           fi
           
