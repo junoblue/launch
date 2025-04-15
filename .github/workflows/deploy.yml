@@ -33,37 +33,27 @@ jobs:
           role-to-assume: arn:aws:iam::597088015766:role/launch-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Create deployment package
+      - name: Create and deploy backend package
         run: |
           # Create deployment package
           zip -r deploy.zip . -x "*.git*" "*.github*" "frontend/*"
-          aws s3 cp deploy.zip s3://launch-deployment-artifacts/backend-deploy.zip
-
-      - name: Download and extract on instance
-        run: |
+          # Convert to base64 for transfer
+          DEPLOY_CONTENT=$(base64 -w 0 deploy.zip)
+          # Upload and extract on instance
           aws ssm send-command \
             --instance-ids ${{ env.BACKEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "aws s3 cp s3://launch-deployment-artifacts/backend-deploy.zip /tmp/deploy.zip",
+              "echo \"'\"$DEPLOY_CONTENT\"'\" | base64 -d > /tmp/deploy.zip",
               "sudo mkdir -p /opt/launch/backend",
               "cd /opt/launch/backend",
               "sudo systemctl stop gunicorn || true",
               "sudo rm -rf /opt/launch/backend/*",
               "sudo unzip -o /tmp/deploy.zip -d /opt/launch/backend/",
-              "sudo chown -R ubuntu:ubuntu /opt/launch/backend"
-            ]'
-
-      - name: Install dependencies and start service
-        run: |
-          aws ssm send-command \
-            --instance-ids ${{ env.BACKEND_INSTANCE_ID }} \
-            --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "cd /opt/launch/backend",
+              "sudo chown -R ubuntu:ubuntu /opt/launch/backend",
               "sudo python3 -m pip install --upgrade pip",
-              "sudo python3 -m pip install -r requirements.txt",
-              "sudo cp gunicorn.service /etc/systemd/system/gunicorn.service",
+              "sudo python3 -m pip install -r /opt/launch/backend/requirements.txt",
+              "sudo cp /opt/launch/backend/gunicorn.service /etc/systemd/system/gunicorn.service",
               "sudo systemctl daemon-reload",
               "sudo systemctl enable gunicorn",
               "sudo systemctl start gunicorn",
@@ -82,8 +72,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './frontend/package.json'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -91,39 +79,29 @@ jobs:
           role-to-assume: arn:aws:iam::597088015766:role/launch-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install dependencies
+      - name: Build frontend
         working-directory: ./frontend
         run: |
-          echo '{"name":"frontend","version":"1.0.0"}' > package.json
           npm install --force
+          npm run build
 
-      - name: Build
-        working-directory: ./frontend
-        run: npm run build
-
-      - name: Deploy to frontend instance
+      - name: Deploy frontend
         run: |
-          # Create deployment package including nginx config
+          # Create deployment package
           cp frontend/nginx/default.conf frontend/dist/
           cd frontend/dist
           zip -r ../../deploy.zip *
           cd ../..
           
-          # Upload to S3
-          aws s3 cp deploy.zip s3://launch-deployment-artifacts/frontend-deploy.zip
-          # Have instance download it
-          aws ssm send-command \
-            --instance-ids ${{ env.FRONTEND_INSTANCE_ID }} \
-            --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "aws s3 cp s3://launch-deployment-artifacts/frontend-deploy.zip /tmp/deploy.zip"
-            ]'
+          # Convert to base64 for transfer
+          DEPLOY_CONTENT=$(base64 -w 0 deploy.zip)
           
-          # Deploy
+          # Upload and deploy
           aws ssm send-command \
             --instance-ids ${{ env.FRONTEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
+              "echo \"'\"$DEPLOY_CONTENT\"'\" | base64 -d > /tmp/deploy.zip",
               "sudo mkdir -p /opt/launch/frontend",
               "sudo rm -rf /opt/launch/frontend/*",
               "sudo unzip -o /tmp/deploy.zip -d /opt/launch/frontend/",
