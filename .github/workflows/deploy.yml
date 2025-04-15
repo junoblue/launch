@@ -11,6 +11,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -56,6 +58,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
       
       - name: Set up Node.js
         uses: actions/setup-node@v3
