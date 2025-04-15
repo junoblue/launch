@@ -37,14 +37,27 @@ jobs:
         run: |
           # Create deployment package
           zip -r deploy.zip . -x "*.git*" "*.github*" "frontend/*"
-          # Convert to base64 for transfer
-          DEPLOY_CONTENT=$(base64 -w 0 deploy.zip)
-          # Upload and extract on instance
+          
+          # Split file into chunks and transfer
+          split -b 20m deploy.zip deploy.zip.part.
+          
+          # Upload each part
+          for part in deploy.zip.part.*; do
+            content=$(base64 -w 0 "$part")
+            aws ssm send-command \
+              --instance-ids ${{ env.BACKEND_INSTANCE_ID }} \
+              --document-name "AWS-RunShellScript" \
+              --parameters commands="[\"echo '$content' | base64 -d > /tmp/$part\"]"
+          done
+          
+          # Combine parts and deploy on instance
           aws ssm send-command \
             --instance-ids ${{ env.BACKEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "echo \"'\"$DEPLOY_CONTENT\"'\" | base64 -d > /tmp/deploy.zip",
+              "cd /tmp",
+              "cat deploy.zip.part.* > deploy.zip",
+              "rm deploy.zip.part.*",
               "sudo mkdir -p /opt/launch/backend",
               "cd /opt/launch/backend",
               "sudo systemctl stop gunicorn || true",
@@ -80,8 +93,20 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Build frontend
-        working-directory: ./frontend
         run: |
+          cd frontend
+          if [ ! -f "package.json" ]; then
+            echo "Creating package.json..."
+            cat > package.json << 'EOF'
+            {
+              "name": "launch-frontend",
+              "version": "1.0.0",
+              "scripts": {
+                "build": "echo 'No build script defined'"
+              }
+            }
+            EOF
+          fi
           npm install --force
           npm run build
 
@@ -93,15 +118,26 @@ jobs:
           zip -r ../../deploy.zip *
           cd ../..
           
-          # Convert to base64 for transfer
-          DEPLOY_CONTENT=$(base64 -w 0 deploy.zip)
+          # Split file into chunks and transfer
+          split -b 20m deploy.zip deploy.zip.part.
           
-          # Upload and deploy
+          # Upload each part
+          for part in deploy.zip.part.*; do
+            content=$(base64 -w 0 "$part")
+            aws ssm send-command \
+              --instance-ids ${{ env.FRONTEND_INSTANCE_ID }} \
+              --document-name "AWS-RunShellScript" \
+              --parameters commands="[\"echo '$content' | base64 -d > /tmp/$part\"]"
+          done
+          
+          # Combine parts and deploy
           aws ssm send-command \
             --instance-ids ${{ env.FRONTEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "echo \"'\"$DEPLOY_CONTENT\"'\" | base64 -d > /tmp/deploy.zip",
+              "cd /tmp",
+              "cat deploy.zip.part.* > deploy.zip",
+              "rm deploy.zip.part.*",
               "sudo mkdir -p /opt/launch/frontend",
               "sudo rm -rf /opt/launch/frontend/*",
               "sudo unzip -o /tmp/deploy.zip -d /opt/launch/frontend/",
