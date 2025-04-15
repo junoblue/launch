@@ -144,7 +144,7 @@ jobs:
           ls -la
           ls -la src/
           cat vite.config.ts
-          npm run build
+          VITE_CWD=$PWD npm run build
           mkdir -p build
           mv dist/* build/
 
