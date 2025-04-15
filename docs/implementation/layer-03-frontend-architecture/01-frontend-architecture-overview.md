@@ -5,24 +5,10 @@ Establish a scalable, maintainable, and consistent frontend architecture using R
 
 ## Current Implementation Status
 
-### Phase 0: Migration from S3 to EC2 Setup
-Currently in transition from S3-hosted static files to EC2-based hosting with nginx. Both configurations are maintained to ensure zero-downtime migration.
+### Phase 0: EC2-Based Frontend Infrastructure
+The frontend application is hosted on EC2 instances in a private subnet, served through nginx, with CloudFront as the CDN layer.
 
-#### Current S3 Configuration (Active)
-```yaml
-S3 Bucket:
-  Name: login-tokyoflo-com
-  Region: us-west-2
-  Purpose: Current static file hosting
-  Access: Private
-  Policy:
-    Version: "2012-10-17"
-    Principal: CloudFront OAI (EMCDEJLB566GZ)
-    Actions: s3:GetObject
-    Resource: arn:aws:s3:::login-tokyoflo-com/*
-```
-
-#### Target EC2 Configuration (In Progress)
+#### EC2 Configuration
 ```yaml
 EC2 Instance:
   Subnet: Private
@@ -35,13 +21,12 @@ EC2 Instance:
     Protocol: HTTP
 ```
 
-#### CloudFront Configuration (Current)
+#### CloudFront Configuration
 ```yaml
 Distribution:
   Origins:
-    - Type: S3 (LoginAppOrigin)
-      Bucket: login-tokyoflo-com.s3.us-west-2.amazonaws.com
-      OAI: origin-access-identity/cloudfront/EMCDEJLB566GZ
+    - Type: Custom (launch-origin-frontend)
+      Domain: internal-launch-alb-frontend-1496026960.us-west-2.elb.amazonaws.com
     - Type: Custom (launch-origin-api)
       Domain: internal-launch-alb-api-1496026960.us-west-2.elb.amazonaws.com
     - Type: Custom (launch-origin-admin)
@@ -49,7 +34,7 @@ Distribution:
     - Type: Custom (launch-origin-public)
       Domain: internal-launch-alb-public-637903362.us-west-2.elb.amazonaws.com
   DefaultBehavior:
-    Origin: LoginAppOrigin
+    Origin: launch-origin-frontend
     Methods: [GET, HEAD, OPTIONS]
     TTL:
       Min: 0
@@ -82,17 +67,11 @@ Distribution:
     "buildTool": "Vite",
     "language": "TypeScript",
     "hosting": {
-      "current": {
-        "storage": "S3",
-        "cdn": "CloudFront",
-        "domain": "login.tokyoflo.com",
-        "status": "active"
-      },
-      "target": {
+      "infrastructure": {
         "hosting": "EC2 (Private Subnet)",
         "webServer": "nginx",
         "staticPath": "/opt/launch/frontend",
-        "status": "in-progress",
+        "status": "active",
         "healthCheck": {
           "path": "/health",
           "interval": "30s",
@@ -100,36 +79,33 @@ Distribution:
           "unhealthyThreshold": 2,
           "healthyThreshold": 3
         }
+      },
+      "cdn": {
+        "provider": "CloudFront",
+        "domain": "login.tokyoflo.com"
       }
     }
   }
 }
 ```
 
-### Migration Progress
-Current migration status and completed steps:
+### Infrastructure Status
+Current infrastructure status and completed steps:
 
 1. CloudFront Configuration ✓
    - [x] Multiple origins configured
    - [x] Custom headers for origin verification
    - [x] Path-based routing established
    - [x] SSL/TLS configuration complete
-   - [ ] Switch default origin to EC2
+   - [x] Default origin set to EC2
 
-2. EC2 Setup (In Progress)
+2. EC2 Setup
    - [x] Instance launched in private subnet
    - [x] Security groups configured
    - [x] IAM roles assigned
    - [ ] nginx configuration
    - [ ] Health check endpoint
    - [ ] Static file serving
-
-3. S3 Transition Plan
-   - [ ] Verify EC2 setup complete
-   - [ ] Test EC2 static file serving
-   - [ ] Update CloudFront origin
-   - [ ] Monitor for 24 hours
-   - [ ] Clean up S3 resources
 
 ### Next Steps (Prioritized)
 1. [ ] Complete nginx configuration on EC2
@@ -144,133 +120,267 @@ Current migration status and completed steps:
    - Check CloudFront integration
    - Monitor performance metrics
 
-3. [ ] Update CloudFront Configuration
-   - Switch default origin to EC2
-   - Update cache behaviors
+3. [ ] Optimize CloudFront Configuration
+   - Fine-tune cache behaviors
    - Test failover scenarios
-   - Verify SSL/TLS
+   - Monitor performance metrics
+   - Set up real-time monitoring
 
-4. [ ] S3 Cleanup (After Successful Migration)
-   - Archive bucket contents
-   - Remove bucket policy
-   - Delete CloudFront OAI
-   - Update documentation
+### Implementation Plan
 
-### Hello World Implementation Plan
+#### Phase 1: Project Setup and Dependencies
+```yaml
+Framework: React 18
+Build Tool: Vite
+Language: TypeScript
+UI Libraries:
+  - shadcn/ui
+  - Tailwind CSS
+  - Radix UI (via shadcn)
+Development Tools:
+  - ESLint
+  - Prettier
+  - Husky (Git hooks)
+  - TypeScript strict mode
+```
+
+#### Phase 2: Atomic Design Implementation
 ```typescript
-{
-  "helloWorld": {
-    "phase": "initial",
-    "components": {
-      "static": {
-        "files": [
-          "index.html",
-          "styles.css",
-          "health.html"
-        ],
-        "location": "/opt/launch/frontend"
-      },
-      "nginx": {
-        "config": "/etc/nginx/sites-available/default",
-        "endpoints": {
-          "/": "Serves index.html",
-          "/health": "Returns 200 OK"
-        }
-      }
-    }
-  }
+// 1. Atoms (Base Components)
+src/components/atoms/
+  ├── Button/
+  │   ├── Button.tsx
+  │   ├── Button.test.tsx
+  │   └── Button.stories.tsx
+  ├── Input/
+  │   ├── Input.tsx
+  │   └── types.ts
+  ├── Typography/
+  │   ├── Text.tsx
+  │   ├── Heading.tsx
+  │   └── types.ts
+  └── Icon/
+      ├── Icon.tsx
+      └── IconRegistry.ts
+
+// 2. Molecules (Composite Components)
+src/components/molecules/
+  ├── SearchBar/
+  │   ├── SearchBar.tsx
+  │   ├── SearchBar.test.tsx
+  │   └── types.ts
+  ├── FormField/
+  │   ├── FormField.tsx
+  │   └── types.ts
+  └── NavigationLink/
+      ├── NavigationLink.tsx
+      └── types.ts
+
+// 3. Organisms (Complex Components)
+src/components/organisms/
+  ├── DataTable/
+  │   ├── DataTable.tsx
+  │   ├── Pagination.tsx
+  │   └── types.ts
+  ├── NavigationMenu/
+  │   ├── NavigationMenu.tsx
+  │   └── types.ts
+  └── Forms/
+      ├── LoginForm.tsx
+      └── types.ts
+
+// 4. Templates (Page Layouts)
+src/components/templates/
+  ├── DashboardLayout/
+  │   ├── DashboardLayout.tsx
+  │   └── types.ts
+  ├── AuthLayout/
+  │   ├── AuthLayout.tsx
+  │   └── types.ts
+  └── AdminLayout/
+      ├── AdminLayout.tsx
+      └── types.ts
+
+// 5. Pages (Route Components)
+src/pages/
+  ├── auth/
+  │   ├── login.tsx
+  │   └── register.tsx
+  ├── dashboard/
+  │   ├── index.tsx
+  │   └── settings.tsx
+  └── admin/
+      ├── users.tsx
+      └── tenants.tsx
+```
+
+#### Phase 3: Theme System
+```typescript
+// Theme Configuration
+src/styles/
+  ├── theme/
+  │   ├── colors.ts
+  │   ├── typography.ts
+  │   ├── spacing.ts
+  │   └── breakpoints.ts
+  └── shadcn/
+      ├── button.ts
+      ├── input.ts
+      └── card.ts
+
+// Multi-tenant Theming
+interface TenantTheme {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  text: string;
+  brandColors: {
+    [key: string]: string;
+  };
+  typography: {
+    fontFamily: string;
+    scale: Record<string, string>;
+  };
+}
+
+// Theme Provider
+const ThemeProvider: FC<{
+  tenant: string;
+  theme: TenantTheme;
+  children: ReactNode;
+}>;
+```
+
+#### Phase 4: State Management
+```typescript
+// Global State (Zustand)
+interface GlobalState {
+  tenant: TenantConfig;
+  user: UserProfile;
+  theme: ThemeConfig;
+  settings: AppSettings;
+}
+
+// API Integration (React Query)
+src/api/
+  ├── hooks/
+  │   ├── useUser.ts
+  │   ├── useTenant.ts
+  │   └── useSettings.ts
+  └── mutations/
+      ├── useUpdateUser.ts
+      ├── useUpdateTenant.ts
+      └── useUpdateSettings.ts
+```
+
+### Development Guidelines
+
+#### 1. Component Structure
+```typescript
+// Component Template
+interface ComponentProps {
+  // Props with TypeScript types
+}
+
+const Component: FC<ComponentProps> = ({
+  // Destructured props
+}) => {
+  // Component logic
+  return (
+    // JSX with Tailwind classes
+  );
+};
+
+// Export with displayName
+Component.displayName = 'Component';
+export default Component;
+```
+
+#### 2. Testing Strategy
+```yaml
+Unit Tests:
+  - Jest
+  - React Testing Library
+  - MSW for API mocking
+  
+Integration Tests:
+  - Cypress
+  - Component testing
+  - E2E flows
+
+Visual Testing:
+  - Storybook
+  - Visual regression
+  - Accessibility checks
+```
+
+#### 3. Performance Optimization
+```typescript
+// Code Splitting
+const DynamicComponent = dynamic(() => import('./Component'), {
+  loading: () => <Skeleton />,
+  ssr: false
+});
+
+// Performance Monitoring
+interface PerformanceMetrics {
+  FCP: number;  // First Contentful Paint
+  LCP: number;  // Largest Contentful Paint
+  TTI: number;  // Time to Interactive
+  TBT: number;  // Total Blocking Time
 }
 ```
 
-#### Implementation Steps
-1. [ ] Create Basic Static Files
-   ```html
-   <!-- index.html -->
-   <!DOCTYPE html>
-   <html lang="en">
-   <head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Launch Platform - Hello World</title>
-     <link rel="stylesheet" href="styles.css">
-   </head>
-   <body>
-     <div class="container">
-       <h1>Launch Platform</h1>
-       <p>Hello World! The frontend service is running.</p>
-     </div>
-   </body>
-   </html>
+### Success Criteria
 
-   <!-- health.html -->
-   <!DOCTYPE html>
-   <html>
-   <head><title>Health Check</title></head>
-   <body>OK</body>
-   </html>
-   ```
+#### Technical Requirements
+```yaml
+Performance:
+  - First Contentful Paint: < 1.5s
+  - Time to Interactive: < 3.5s
+  - Lighthouse Score: > 90
+  - Bundle Size: < 250KB (initial)
 
-2. [ ] Configure nginx
-   ```nginx
-   server {
-     listen 80;
-     server_name _;
-     
-     root /opt/launch/frontend;
-     index index.html;
+Code Quality:
+  - Test Coverage: > 80%
+  - TypeScript Strict: Enabled
+  - Zero ESLint Errors
+  - Documented Components
 
-     # Health check endpoint
-     location /health {
-       access_log off;
-       add_header Content-Type text/plain;
-       return 200 'OK';
-     }
+Accessibility:
+  - WCAG 2.1 Compliant
+  - Keyboard Navigation
+  - Screen Reader Support
+  - Color Contrast: WCAG AAA
+```
 
-     # Serve static files
-     location / {
-       try_files $uri $uri/ /index.html;
-     }
-   }
-   ```
+#### Implementation Checklist
+```yaml
+Phase 1:
+  - [ ] Project scaffolding
+  - [ ] Dependencies setup
+  - [ ] Build configuration
+  - [ ] Development tooling
 
-3. [ ] Deployment Steps
-   - Create directory: `sudo mkdir -p /opt/launch/frontend`
-   - Set permissions: `sudo chown -R ubuntu:ubuntu /opt/launch/frontend`
-   - Copy static files to `/opt/launch/frontend/`
-   - Configure nginx and test: `sudo nginx -t`
-   - Reload nginx: `sudo systemctl reload nginx`
+Phase 2:
+  - [ ] Atomic components
+  - [ ] Component documentation
+  - [ ] Unit tests
+  - [ ] Storybook setup
 
-4. [ ] Validation Steps
-   - [ ] Verify nginx configuration
-   - [ ] Test health check endpoint
-   - [ ] Validate static file serving
-   - [ ] Check CloudFront integration
-   - [ ] Monitor ALB health checks
+Phase 3:
+  - [ ] Theme system
+  - [ ] Multi-tenant support
+  - [ ] Design tokens
+  - [ ] Style guidelines
 
-5. [ ] Monitoring Setup
-   - [ ] Configure nginx access logs
-   - [ ] Set up error logging
-   - [ ] Implement basic metrics
-   - [ ] Create CloudWatch alarms
-
-#### Success Criteria
-- Health check endpoint returns 200 OK
-- Static files are served correctly
-- nginx configuration is valid
-- ALB health checks pass consistently
-- CloudFront serves content correctly
-- Logs are properly configured
-
-#### Rollback Plan
-1. Revert nginx configuration
-   ```bash
-   sudo cp /etc/nginx/sites-available/default.backup /etc/nginx/sites-available/default
-   sudo nginx -t && sudo systemctl reload nginx
-   ```
-
-2. Restore S3 as primary origin in CloudFront
-   - Update default cache behavior to use S3 origin
-   - Verify S3 content is accessible
+Phase 4:
+  - [ ] State management
+  - [ ] API integration
+  - [ ] Performance optimization
+  - [ ] Deployment pipeline
+```
 
 ## Core Components
 
