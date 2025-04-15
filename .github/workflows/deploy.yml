@@ -61,6 +61,13 @@ jobs:
         with:
           ref: ${{ github.ref }}
       
+      - name: Clean up root package.json
+        run: |
+          if [ -f "package.json" ]; then
+            echo "Removing root package.json to avoid conflicts"
+            rm package.json
+          fi
+      
       - name: Validate frontend directory
         run: |
           if [ ! -d "frontend" ]; then
