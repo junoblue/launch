@@ -74,12 +74,6 @@ jobs:
           
       - name: Clean up and validate
         run: |
-          # Clean up root package.json
-          if [ -f "package.json" ]; then
-            echo "Removing root package.json to avoid conflicts"
-            rm package.json
-          fi
-          
           # Validate frontend directory
           if [ ! -d "frontend" ]; then
             echo "Error: frontend directory not found"
@@ -93,14 +87,14 @@ jobs:
       - name: Install dependencies and build
         run: |
           cd frontend
-          npm ci
+          npm install --force
           npm run build
           # Verify build output exists
-          if [ ! -d "dist" ]; then
-            echo "Error: Build output directory 'dist' not found"
+          if [ ! -d "build" ]; then
+            echo "Error: Build output directory 'build' not found"
             exit 1
           fi
-          zip -r ../frontend-deploy.zip dist
+          zip -r ../frontend-deploy.zip build
           
       - name: Upload and deploy frontend
         run: |
@@ -114,7 +108,7 @@ jobs:
               "sudo systemctl stop nginx",
               "sudo rm -rf frontend/*",
               "sudo unzip -o frontend-deploy.zip -d frontend/",
-              "sudo mv frontend/dist/* frontend/",
-              "sudo rm -rf frontend/dist",
+              "sudo mv frontend/build/* frontend/",
+              "sudo rm -rf frontend/build",
               "sudo systemctl start nginx"
             ]' 
