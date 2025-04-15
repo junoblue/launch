@@ -82,15 +82,20 @@ jobs:
           # Create deployment package
           zip -r deploy.zip . -x "*.git*" "*.github*"
           
-          # Upload and deploy
+          # Upload deployment package to S3
+          aws s3 cp deploy.zip s3://launch-deployment/backend/deploy.zip
+          
+          # Deploy using SSM
           aws ssm send-command \
             --instance-ids ${{ env.BACKEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
+              "echo Starting backend deployment...",
               "sudo mkdir -p /opt/launch/backend",
               "cd /opt/launch/backend",
               "sudo systemctl stop gunicorn || true",
               "sudo rm -rf /opt/launch/backend/*",
+              "aws s3 cp s3://launch-deployment/backend/deploy.zip /tmp/deploy.zip",
               "sudo unzip -o /tmp/deploy.zip -d /opt/launch/backend/",
               "sudo chown -R ubuntu:ubuntu /opt/launch/backend",
               "sudo cp /opt/launch/backend/gunicorn.service /etc/systemd/system/gunicorn.service",
@@ -101,8 +106,10 @@ jobs:
               "sudo systemctl enable gunicorn",
               "sudo systemctl start gunicorn",
               "sleep 5",
-              "sudo systemctl status gunicorn"
+              "sudo systemctl status gunicorn",
+              "curl -s http://localhost:8000/health || echo Health check failed"
             ]'
+        continue-on-error: false
 
   deploy-frontend:
     needs: test
@@ -129,7 +136,10 @@ jobs:
 
       - name: Build
         working-directory: ./frontend
-        run: npm run build
+        run: |
+          npm run build
+          mkdir -p build
+          mv dist/* build/
 
       - name: Deploy to frontend instance
         working-directory: ./frontend
@@ -137,18 +147,25 @@ jobs:
           # Create deployment package including nginx config
           zip -r deploy.zip build/* nginx/default.conf
           
-          # Upload and deploy
+          # Upload deployment package to S3
+          aws s3 cp deploy.zip s3://launch-deployment/frontend/deploy.zip
+          
+          # Deploy using SSM
           aws ssm send-command \
             --instance-ids ${{ env.FRONTEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
+              "echo Starting frontend deployment...",
               "sudo mkdir -p /opt/launch/frontend",
               "sudo rm -rf /opt/launch/frontend/*",
+              "aws s3 cp s3://launch-deployment/frontend/deploy.zip /tmp/deploy.zip",
               "sudo unzip -o /tmp/deploy.zip -d /tmp/frontend-temp/",
               "sudo mv /tmp/frontend-temp/build/* /opt/launch/frontend/",
               "sudo mv /tmp/frontend-temp/nginx/default.conf /etc/nginx/sites-available/default",
               "sudo rm -rf /tmp/frontend-temp",
               "sudo chown -R ubuntu:ubuntu /opt/launch/frontend",
-              "sudo nginx -t && sudo systemctl reload nginx || (sudo systemctl restart nginx && sleep 5)",
-              "curl -s http://localhost/health || echo 'Health check failed'"
-            ]' 
+              "sudo nginx -t",
+              "sudo systemctl reload nginx || (sudo systemctl restart nginx && sleep 5)",
+              "curl -s http://localhost/health || echo Health check failed"
+            ]'
+        continue-on-error: false 
