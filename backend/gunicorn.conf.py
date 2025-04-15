@@ -1,0 +1,11 @@
+workers = 3
+bind = "0.0.0.0:8000"
+worker_class = "sync"
+timeout = 30
+keepalive = 2
+max_requests = 1000
+max_requests_jitter = 50
+worker_tmp_dir = "/dev/shm"
+errorlog = "-"
+accesslog = "-"
+loglevel = "info" 

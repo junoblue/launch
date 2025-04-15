@@ -1,0 +1,9 @@
+gunicorn==23.0.0
+flask==3.1.0
+psycopg2-binary==2.9.10
+flask-sqlalchemy==3.1.1
+flask-migrate==4.0.5
+flask-cors==4.0.0
+python-dotenv==1.0.0
+requests==2.32.3
+boto3==1.34.34 

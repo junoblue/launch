@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn daemon for Launch Backend
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/launch/backend
+Environment="PATH=/opt/launch/venv/bin"
+ExecStart=/opt/launch/venv/bin/gunicorn -c /opt/launch/backend/gunicorn.conf.py app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target 
