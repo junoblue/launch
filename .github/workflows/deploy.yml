@@ -38,41 +38,39 @@ jobs:
           # Create deployment package
           zip -r deploy.zip . -x "*.git*" "*.github*" "frontend/*"
           
-          # Split file into chunks and transfer
-          split -b 20m deploy.zip deploy.zip.part.
+          # Create temp script for deployment
+          cat > deploy_commands.sh << 'EOF'
+          sudo mkdir -p /opt/launch/backend
+          cd /opt/launch/backend
+          sudo systemctl stop gunicorn || true
+          sudo rm -rf /opt/launch/backend/*
+          sudo unzip -o /tmp/deploy.zip -d /opt/launch/backend/
+          sudo chown -R ubuntu:ubuntu /opt/launch/backend
+          sudo python3 -m pip install --upgrade pip
+          sudo python3 -m pip install -r /opt/launch/backend/requirements.txt
+          sudo cp /opt/launch/backend/gunicorn.service /etc/systemd/system/gunicorn.service
+          sudo systemctl daemon-reload
+          sudo systemctl enable gunicorn
+          sudo systemctl start gunicorn
+          sleep 5
+          sudo systemctl status gunicorn
+          EOF
           
-          # Upload each part
-          for part in deploy.zip.part.*; do
-            content=$(base64 -w 0 "$part")
-            aws ssm send-command \
-              --instance-ids ${{ env.BACKEND_INSTANCE_ID }} \
-              --document-name "AWS-RunShellScript" \
-              --parameters commands="[\"echo '$content' | base64 -d > /tmp/$part\"]"
-          done
+          # Upload files using AWS CLI
+          aws ec2-instance-connect send-serial-console-ssh-public-key \
+            --instance-id ${{ env.BACKEND_INSTANCE_ID }} \
+            --serial-port 0 \
+            --ssh-public-key file://~/.ssh/id_rsa.pub
           
-          # Combine parts and deploy on instance
+          # Use SCP to transfer files
+          scp -o StrictHostKeyChecking=no deploy.zip ec2-user@${{ env.BACKEND_INSTANCE_ID }}:/tmp/
+          scp -o StrictHostKeyChecking=no deploy_commands.sh ec2-user@${{ env.BACKEND_INSTANCE_ID }}:/tmp/
+          
+          # Execute deployment commands
           aws ssm send-command \
             --instance-ids ${{ env.BACKEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "cd /tmp",
-              "cat deploy.zip.part.* > deploy.zip",
-              "rm deploy.zip.part.*",
-              "sudo mkdir -p /opt/launch/backend",
-              "cd /opt/launch/backend",
-              "sudo systemctl stop gunicorn || true",
-              "sudo rm -rf /opt/launch/backend/*",
-              "sudo unzip -o /tmp/deploy.zip -d /opt/launch/backend/",
-              "sudo chown -R ubuntu:ubuntu /opt/launch/backend",
-              "sudo python3 -m pip install --upgrade pip",
-              "sudo python3 -m pip install -r /opt/launch/backend/requirements.txt",
-              "sudo cp /opt/launch/backend/gunicorn.service /etc/systemd/system/gunicorn.service",
-              "sudo systemctl daemon-reload",
-              "sudo systemctl enable gunicorn",
-              "sudo systemctl start gunicorn",
-              "sleep 5",
-              "sudo systemctl status gunicorn"
-            ]'
+            --parameters 'commands=["bash /tmp/deploy_commands.sh"]'
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -95,18 +93,16 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
-          if [ ! -f "package.json" ]; then
-            echo "Creating package.json..."
-            cat > package.json << 'EOF'
-            {
-              "name": "launch-frontend",
-              "version": "1.0.0",
-              "scripts": {
-                "build": "echo 'No build script defined'"
-              }
+          # Create package.json with proper heredoc syntax
+          cat > package.json << 'EOFMARKER'
+          {
+            "name": "launch-frontend",
+            "version": "1.0.0",
+            "scripts": {
+              "build": "echo 'No build script defined'"
             }
-            EOF
-          fi
+          }
+          EOFMARKER
           npm install --force
           npm run build
 
@@ -118,32 +114,30 @@ jobs:
           zip -r ../../deploy.zip *
           cd ../..
           
-          # Split file into chunks and transfer
-          split -b 20m deploy.zip deploy.zip.part.
+          # Create temp script for deployment
+          cat > deploy_commands.sh << 'EOF'
+          sudo mkdir -p /opt/launch/frontend
+          sudo rm -rf /opt/launch/frontend/*
+          sudo unzip -o /tmp/deploy.zip -d /opt/launch/frontend/
+          sudo cp /opt/launch/frontend/default.conf /etc/nginx/sites-available/default
+          sudo rm -f /opt/launch/frontend/default.conf
+          sudo chown -R ubuntu:ubuntu /opt/launch/frontend
+          sudo nginx -t && sudo systemctl reload nginx || (sudo systemctl restart nginx && sleep 5)
+          curl -s http://localhost/health || echo 'Health check failed'
+          EOF
           
-          # Upload each part
-          for part in deploy.zip.part.*; do
-            content=$(base64 -w 0 "$part")
-            aws ssm send-command \
-              --instance-ids ${{ env.FRONTEND_INSTANCE_ID }} \
-              --document-name "AWS-RunShellScript" \
-              --parameters commands="[\"echo '$content' | base64 -d > /tmp/$part\"]"
-          done
+          # Upload files using AWS CLI
+          aws ec2-instance-connect send-serial-console-ssh-public-key \
+            --instance-id ${{ env.FRONTEND_INSTANCE_ID }} \
+            --serial-port 0 \
+            --ssh-public-key file://~/.ssh/id_rsa.pub
           
-          # Combine parts and deploy
+          # Use SCP to transfer files
+          scp -o StrictHostKeyChecking=no deploy.zip ec2-user@${{ env.FRONTEND_INSTANCE_ID }}:/tmp/
+          scp -o StrictHostKeyChecking=no deploy_commands.sh ec2-user@${{ env.FRONTEND_INSTANCE_ID }}:/tmp/
+          
+          # Execute deployment commands
           aws ssm send-command \
             --instance-ids ${{ env.FRONTEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "cd /tmp",
-              "cat deploy.zip.part.* > deploy.zip",
-              "rm deploy.zip.part.*",
-              "sudo mkdir -p /opt/launch/frontend",
-              "sudo rm -rf /opt/launch/frontend/*",
-              "sudo unzip -o /tmp/deploy.zip -d /opt/launch/frontend/",
-              "sudo cp /opt/launch/frontend/default.conf /etc/nginx/sites-available/default",
-              "sudo rm -f /opt/launch/frontend/default.conf",
-              "sudo chown -R ubuntu:ubuntu /opt/launch/frontend",
-              "sudo nginx -t && sudo systemctl reload nginx || (sudo systemctl restart nginx && sleep 5)",
-              "curl -s http://localhost/health || echo 'Health check failed'"
-            ]' 
+            --parameters 'commands=["bash /tmp/deploy_commands.sh"]' 
