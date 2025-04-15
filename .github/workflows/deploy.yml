@@ -61,24 +61,6 @@ jobs:
         with:
           ref: ${{ github.ref }}
       
-      - name: Clean up root package.json
-        run: |
-          if [ -f "package.json" ]; then
-            echo "Removing root package.json to avoid conflicts"
-            rm package.json
-          fi
-      
-      - name: Validate frontend directory
-        run: |
-          if [ ! -d "frontend" ]; then
-            echo "Error: frontend directory not found"
-            exit 1
-          fi
-          if [ ! -f "frontend/package.json" ]; then
-            echo "Error: package.json not found in frontend directory"
-            exit 1
-          fi
-      
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -89,6 +71,24 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-west-2
+          
+      - name: Clean up and validate
+        run: |
+          # Clean up root package.json
+          if [ -f "package.json" ]; then
+            echo "Removing root package.json to avoid conflicts"
+            rm package.json
+          fi
+          
+          # Validate frontend directory
+          if [ ! -d "frontend" ]; then
+            echo "Error: frontend directory not found"
+            exit 1
+          fi
+          if [ ! -f "frontend/package.json" ]; then
+            echo "Error: package.json not found in frontend directory"
+            exit 1
+          fi
           
       - name: Install dependencies and build
         run: |
