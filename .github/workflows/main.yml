@@ -140,6 +140,8 @@ jobs:
       - name: Build
         working-directory: ./frontend
         run: |
+          pwd
+          ls -la
           npm run build
           mkdir -p build
           mv dist/* build/
