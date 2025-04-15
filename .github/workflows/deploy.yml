@@ -93,7 +93,8 @@ jobs:
         run: |
           cd frontend
           
-          # Create deployment package
+          # Create deployment package including nginx config
+          cp nginx/default.conf build/
           zip -r deploy.zip build/
           
           # Upload to instance
@@ -103,6 +104,7 @@ jobs:
             --parameters 'commands=[
               "sudo rm -rf /opt/launch/frontend/*",
               "sudo unzip -o /tmp/deploy.zip -d /opt/launch/frontend/",
+              "sudo cp /opt/launch/frontend/default.conf /etc/nginx/sites-available/default",
               "sudo chown -R ubuntu:ubuntu /opt/launch/frontend",
-              "sudo systemctl reload nginx"
+              "sudo nginx -t && sudo systemctl reload nginx"
             ]' 
