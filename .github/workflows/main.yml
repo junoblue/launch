@@ -142,6 +142,8 @@ jobs:
         run: |
           pwd
           ls -la
+          ls -la src/
+          cat vite.config.ts
           npm run build
           mkdir -p build
           mv dist/* build/
