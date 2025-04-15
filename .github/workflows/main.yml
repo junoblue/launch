@@ -19,6 +19,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
       
@@ -57,6 +58,7 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
 
@@ -109,7 +111,7 @@ jobs:
               "sudo systemctl start gunicorn",
               "sleep 5",
               "sudo systemctl status gunicorn",
-              "curl -s http://localhost:8000/health || echo Health check failed"
+              "curl -s http://localhost:8000/health || exit 1"
             ]'
         continue-on-error: false
 
@@ -117,6 +119,7 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
 
@@ -133,26 +136,27 @@ jobs:
           role-to-assume: arn:aws:iam::597088015766:role/launch-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Build
+      - name: Install dependencies and build
         working-directory: ./frontend
         run: |
-          pwd
-          ls -la
-          ls -la src/
-          cat vite.config.ts
-          VITE_CWD=$PWD npm run build
-          mkdir -p build
-          mv dist/* build/
+          npm ci
+          npm run build
+          
+      - name: Verify build output
+        working-directory: ./frontend
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Build directory 'dist' not found!"
+            exit 1
+          fi
+          ls -la dist/
 
       - name: Deploy to frontend instance
         working-directory: ./frontend
         run: |
-          # Create deployment package including nginx config
-          zip -r deploy.zip build/* nginx/default.conf
+          # Create deployment package including nginx config and build output
+          cp -r dist/* .
+          zip -r deploy.zip index.html assets/* nginx/default.conf
           
           # Upload deployment package to S3
           aws s3 cp deploy.zip s3://launch-deployment/frontend/deploy.zip
@@ -166,13 +170,13 @@ jobs:
               "sudo mkdir -p /opt/launch/frontend",
               "sudo rm -rf /opt/launch/frontend/*",
               "aws s3 cp s3://launch-deployment/frontend/deploy.zip /tmp/deploy.zip",
-              "sudo unzip -o /tmp/deploy.zip -d /tmp/frontend-temp/",
-              "sudo mv /tmp/frontend-temp/build/* /opt/launch/frontend/",
-              "sudo mv /tmp/frontend-temp/nginx/default.conf /etc/nginx/sites-available/default",
-              "sudo rm -rf /tmp/frontend-temp",
+              "cd /opt/launch/frontend",
+              "sudo unzip -o /tmp/deploy.zip",
+              "sudo cp nginx/default.conf /etc/nginx/sites-available/default",
+              "sudo rm -f /tmp/deploy.zip",
               "sudo chown -R ubuntu:ubuntu /opt/launch/frontend",
-              "sudo nginx -t",
+              "sudo nginx -t || exit 1",
               "sudo systemctl reload nginx || (sudo systemctl restart nginx && sleep 5)",
-              "curl -s http://localhost/health || echo Health check failed"
+              "curl -s http://localhost/health || exit 1"
             ]'
         continue-on-error: false 
