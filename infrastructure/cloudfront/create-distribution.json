@@ -1,0 +1,81 @@
+{
+    "DistributionConfig": {
+        "CallerReference": "login-tokyoflo-setup-2024-04-15",
+        "Aliases": {
+            "Quantity": 1,
+            "Items": ["login.tokyoflo.com"]
+        },
+        "DefaultRootObject": "index.html",
+        "Origins": {
+            "Quantity": 1,
+            "Items": [
+                {
+                    "Id": "S3-login-tokyoflo-com",
+                    "DomainName": "login-tokyoflo-com.s3.us-west-2.amazonaws.com",
+                    "S3OriginConfig": {
+                        "OriginAccessIdentity": ""
+                    }
+                }
+            ]
+        },
+        "DefaultCacheBehavior": {
+            "TargetOriginId": "S3-login-tokyoflo-com",
+            "ForwardedValues": {
+                "QueryString": false,
+                "Cookies": {
+                    "Forward": "none"
+                }
+            },
+            "TrustedSigners": {
+                "Enabled": false,
+                "Quantity": 0
+            },
+            "ViewerProtocolPolicy": "redirect-to-https",
+            "MinTTL": 0,
+            "AllowedMethods": {
+                "Quantity": 2,
+                "Items": ["HEAD", "GET"],
+                "CachedMethods": {
+                    "Quantity": 2,
+                    "Items": ["HEAD", "GET"]
+                }
+            },
+            "SmoothStreaming": false,
+            "DefaultTTL": 86400,
+            "MaxTTL": 31536000,
+            "Compress": true
+        },
+        "CustomErrorResponses": {
+            "Quantity": 2,
+            "Items": [
+                {
+                    "ErrorCode": 403,
+                    "ResponsePagePath": "/index.html",
+                    "ResponseCode": "200",
+                    "ErrorCachingMinTTL": 300
+                },
+                {
+                    "ErrorCode": 404,
+                    "ResponsePagePath": "/index.html",
+                    "ResponseCode": "200",
+                    "ErrorCachingMinTTL": 300
+                }
+            ]
+        },
+        "Comment": "Distribution for login.tokyoflo.com",
+        "Logging": {
+            "Enabled": false,
+            "IncludeCookies": false,
+            "Bucket": "",
+            "Prefix": ""
+        },
+        "PriceClass": "PriceClass_100",
+        "Enabled": true,
+        "ViewerCertificate": {
+            "ACMCertificateArn": "arn:aws:acm:us-west-2:597088015766:certificate/a5925eb8-a4da-45b2-9df8-602e8fe6bd13",
+            "SSLSupportMethod": "sni-only",
+            "MinimumProtocolVersion": "TLSv1.2_2021"
+        },
+        "IsIPV6Enabled": true
+    }
+} 

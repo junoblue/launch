@@ -1,0 +1,247 @@
+{
+  "CallerReference": "launch-cf-main-20240409",
+  "Aliases": {
+    "Quantity": 3,
+    "Items": [
+      "login.tokyoflo.com",
+      "samurai.tokyoflo.com",
+      "api.tokyoflo.com"
+    ]
+  },
+  "DefaultRootObject": "index.html",
+  "Origins": {
+    "Quantity": 3,
+    "Items": [
+      {
+        "Id": "launch-origin-public",
+        "DomainName": "internal-launch-alb-public-637903362.us-west-2.elb.amazonaws.com",
+        "OriginPath": "",
+        "CustomHeaders": {
+          "Quantity": 1,
+          "Items": [
+            {
+              "HeaderName": "X-Origin-Verify",
+              "HeaderValue": "launch-secure-header"
+            }
+          ]
+        },
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "https-only",
+          "OriginSslProtocols": {
+            "Quantity": 1,
+            "Items": ["TLSv1.2"]
+          },
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        }
+      },
+      {
+        "Id": "launch-origin-api",
+        "DomainName": "internal-launch-alb-api-1496026960.us-west-2.elb.amazonaws.com",
+        "OriginPath": "",
+        "CustomHeaders": {
+          "Quantity": 1,
+          "Items": [
+            {
+              "HeaderName": "X-Origin-Verify",
+              "HeaderValue": "launch-secure-header"
+            }
+          ]
+        },
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "https-only",
+          "OriginSslProtocols": {
+            "Quantity": 1,
+            "Items": ["TLSv1.2"]
+          },
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        }
+      },
+      {
+        "Id": "launch-origin-admin",
+        "DomainName": "internal-launch-alb-admin-577028544.us-west-2.elb.amazonaws.com",
+        "OriginPath": "",
+        "CustomHeaders": {
+          "Quantity": 1,
+          "Items": [
+            {
+              "HeaderName": "X-Origin-Verify",
+              "HeaderValue": "launch-secure-header"
+            }
+          ]
+        },
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "https-only",
+          "OriginSslProtocols": {
+            "Quantity": 1,
+            "Items": ["TLSv1.2"]
+          },
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        }
+      }
+    ]
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "launch-origin-public",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": {
+      "Quantity": 7,
+      "Items": ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"],
+      "CachedMethods": {
+        "Quantity": 2,
+        "Items": ["HEAD", "GET"]
+      }
+    },
+    "SmoothStreaming": false,
+    "Compress": true,
+    "MinTTL": 0,
+    "DefaultTTL": 86400,
+    "MaxTTL": 31536000,
+    "ForwardedValues": {
+      "QueryString": true,
+      "Cookies": {
+        "Forward": "all"
+      },
+      "Headers": {
+        "Quantity": 1,
+        "Items": ["Host"]
+      },
+      "QueryStringCacheKeys": {
+        "Quantity": 0,
+        "Items": []
+      }
+    },
+    "FieldLevelEncryptionId": "",
+    "LambdaFunctionAssociations": {
+      "Quantity": 0,
+      "Items": []
+    }
+  },
+  "CacheBehaviors": {
+    "Quantity": 2,
+    "Items": [
+      {
+        "PathPattern": "/api/*",
+        "TargetOriginId": "launch-origin-api",
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": {
+          "Quantity": 7,
+          "Items": ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"],
+          "CachedMethods": {
+            "Quantity": 2,
+            "Items": ["HEAD", "GET"]
+          }
+        },
+        "SmoothStreaming": false,
+        "MinTTL": 0,
+        "DefaultTTL": 0,
+        "MaxTTL": 0,
+        "Compress": true,
+        "ForwardedValues": {
+          "QueryString": true,
+          "Cookies": {
+            "Forward": "all"
+          },
+          "Headers": {
+            "Quantity": 1,
+            "Items": ["Host"]
+          },
+          "QueryStringCacheKeys": {
+            "Quantity": 0,
+            "Items": []
+          }
+        },
+        "FieldLevelEncryptionId": "",
+        "LambdaFunctionAssociations": {
+          "Quantity": 0,
+          "Items": []
+        }
+      },
+      {
+        "PathPattern": "/admin/*",
+        "TargetOriginId": "launch-origin-admin",
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": {
+          "Quantity": 7,
+          "Items": ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"],
+          "CachedMethods": {
+            "Quantity": 2,
+            "Items": ["HEAD", "GET"]
+          }
+        },
+        "SmoothStreaming": false,
+        "MinTTL": 0,
+        "DefaultTTL": 86400,
+        "MaxTTL": 31536000,
+        "Compress": true,
+        "ForwardedValues": {
+          "QueryString": true,
+          "Cookies": {
+            "Forward": "all"
+          },
+          "Headers": {
+            "Quantity": 1,
+            "Items": ["Host"]
+          },
+          "QueryStringCacheKeys": {
+            "Quantity": 0,
+            "Items": []
+          }
+        },
+        "FieldLevelEncryptionId": "",
+        "LambdaFunctionAssociations": {
+          "Quantity": 0,
+          "Items": []
+        }
+      }
+    ]
+  },
+  "CustomErrorResponses": {
+    "Quantity": 2,
+    "Items": [
+      {
+        "ErrorCode": 403,
+        "ResponsePagePath": "/index.html",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      },
+      {
+        "ErrorCode": 404,
+        "ResponsePagePath": "/index.html",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      }
+    ]
+  },
+  "Comment": "CloudFront distribution for launch application",
+  "Logging": {
+    "Enabled": false,
+    "IncludeCookies": false,
+    "Bucket": "",
+    "Prefix": ""
+  },
+  "PriceClass": "PriceClass_100",
+  "Enabled": true,
+  "ViewerCertificate": {
+    "ACMCertificateArn": "arn:aws:acm:us-east-1:597088015766:certificate/e31733d4-f38f-46d3-84d8-4f5753c5b006",
+    "SSLSupportMethod": "sni-only",
+    "MinimumProtocolVersion": "TLSv1.2_2021"
+  },
+  "Restrictions": {
+    "GeoRestriction": {
+      "RestrictionType": "none",
+      "Quantity": 0
+    }
+  },
+  "WebACLId": "arn:aws:wafv2:us-east-1:597088015766:global/webacl/launch-waf-main/e43ab25f-6cdf-4c69-9e22-c110095bc6ce",
+  "HttpVersion": "http2",
+  "IsIPV6Enabled": true
+} 

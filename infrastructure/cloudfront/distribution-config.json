@@ -1,0 +1,49 @@
+{
+  "Comment": "Distribution for login.tokyoflo.com",
+  "Origins": [{
+    "Id": "LoginAppOrigin",
+    "DomainName": "${S3_BUCKET_DOMAIN}",
+    "S3OriginConfig": {
+      "OriginAccessIdentity": "${CLOUDFRONT_OAI}"
+    }
+  }],
+  "DefaultRootObject": "index.html",
+  "Enabled": true,
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "LoginAppOrigin",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": ["GET", "HEAD", "OPTIONS"],
+    "CachedMethods": ["GET", "HEAD", "OPTIONS"],
+    "Compress": true,
+    "DefaultTTL": 86400,
+    "ForwardedValues": {
+      "QueryString": false,
+      "Cookies": {
+        "Forward": "none"
+      }
+    }
+  },
+  "CustomErrorResponses": [
+    {
+      "ErrorCode": 403,
+      "ResponsePagePath": "/index.html",
+      "ResponseCode": 200,
+      "ErrorCachingMinTTL": 300
+    },
+    {
+      "ErrorCode": 404,
+      "ResponsePagePath": "/index.html",
+      "ResponseCode": 200,
+      "ErrorCachingMinTTL": 300
+    }
+  ],
+  "ViewerCertificate": {
+    "AcmCertificateArn": "${ACM_CERTIFICATE_ARN}",
+    "SslSupportMethod": "sni-only",
+    "MinimumProtocolVersion": "TLSv1.2_2021"
+  },
+  "Aliases": [
+    "login.tokyoflo.com"
+  ],
+  "PriceClass": "PriceClass_100"
+} 

@@ -1,0 +1,67 @@
+{
+  "CallerReference": "login-tokyoflo-setup-2025-04-14",
+  "Comment": "Distribution for login.tokyoflo.com",
+  "Origins": {
+    "Quantity": 1,
+    "Items": [{
+      "Id": "LoginAppOrigin",
+      "DomainName": "login-tokyoflo-com.s3.us-west-2.amazonaws.com",
+      "S3OriginConfig": {
+        "OriginAccessIdentity": "origin-access-identity/cloudfront/EMCDEJLB566GZ"
+      }
+    }]
+  },
+  "DefaultRootObject": "index.html",
+  "Enabled": true,
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "LoginAppOrigin",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": {
+      "Quantity": 3,
+      "Items": ["GET", "HEAD", "OPTIONS"],
+      "CachedMethods": {
+        "Quantity": 3,
+        "Items": ["GET", "HEAD", "OPTIONS"]
+      }
+    },
+    "Compress": true,
+    "MinTTL": 0,
+    "DefaultTTL": 86400,
+    "MaxTTL": 31536000,
+    "ForwardedValues": {
+      "QueryString": false,
+      "Cookies": {
+        "Forward": "none"
+      }
+    }
+  },
+  "CustomErrorResponses": {
+    "Quantity": 2,
+    "Items": [
+      {
+        "ErrorCode": 403,
+        "ResponsePagePath": "/index.html",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      },
+      {
+        "ErrorCode": 404,
+        "ResponsePagePath": "/index.html",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      }
+    ]
+  },
+  "ViewerCertificate": {
+    "ACMCertificateArn": "arn:aws:acm:us-east-1:597088015766:certificate/e31733d4-f38f-46d3-84d8-4f5753c5b006",
+    "SSLSupportMethod": "sni-only",
+    "MinimumProtocolVersion": "TLSv1.2_2021"
+  },
+  "Aliases": {
+    "Quantity": 1,
+    "Items": ["login.tokyoflo.com"]
+  },
+  "PriceClass": "PriceClass_100",
+  "HttpVersion": "http2",
+  "IsIPV6Enabled": true
+} 

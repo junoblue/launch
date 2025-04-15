@@ -1,4 +1,4 @@
-name: Deploy Launch Application
+name: Launch Application CI/CD
 
 on:
   push:
@@ -17,7 +17,37 @@ env:
   BACKEND_INSTANCE_ID: i-0a374e25291d206aa
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          cd frontend && npm ci
+        
+      - name: Run tests
+        run: |
+          python -m pytest
+          cd frontend && npm test
+
   deploy-backend:
+    needs: test
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -38,10 +68,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Run tests
-        run: |
-          python -m pytest
 
       - name: Deploy to backend instance
         run: |
@@ -71,6 +97,8 @@ jobs:
             ]'
 
   deploy-frontend:
+    needs: test
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -116,4 +144,4 @@ jobs:
               "sudo chown -R ubuntu:ubuntu /opt/launch/frontend",
               "sudo nginx -t && sudo systemctl reload nginx || (sudo systemctl restart nginx && sleep 5)",
               "curl -s http://localhost/health || echo 'Health check failed'"
-            ]'
+            ]' 

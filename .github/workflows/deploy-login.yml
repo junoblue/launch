@@ -1,0 +1,95 @@
+name: Deploy Login App
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-login.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::597088015766:role/launch-github-actions-role
+          aws-region: us-west-2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install --force
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Deploy to EC2
+        run: |
+          # Get the frontend instance ID
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=launch-frontend" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text)
+          
+          # Create a temporary directory on the instance
+          aws ssm send-command \
+            --instance-ids $INSTANCE_ID \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["mkdir -p /tmp/frontend-deploy"]'
+          
+          # Upload the build files
+          aws s3 cp frontend/build/ s3://launch-artifacts/frontend/ --recursive
+          
+          # Download and extract on the instance
+          aws ssm send-command \
+            --instance-ids $INSTANCE_ID \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "aws s3 sync s3://launch-artifacts/frontend/ /tmp/frontend-deploy/",
+              "sudo rsync -av --delete /tmp/frontend-deploy/ /opt/launch/frontend/",
+              "sudo chown -R ubuntu:ubuntu /opt/launch/frontend",
+              "sudo systemctl reload nginx"
+            ]'
+          
+          # Clean up
+          aws ssm send-command \
+            --instance-ids $INSTANCE_ID \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["rm -rf /tmp/frontend-deploy"]'
+
+      - name: Update CloudFront Distribution
+        run: |
+          # Get existing distribution ID for login.tokyoflo.com
+          DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?contains(@, 'login.tokyoflo.com')]].Id" --output text)
+          
+          if [ -z "$DIST_ID" ]; then
+            echo "No CloudFront distribution found for login.tokyoflo.com"
+            exit 1
+          else
+            # Update existing distribution
+            CONFIG=$(aws cloudfront get-distribution-config --id $DIST_ID)
+            ETAG=$(echo $CONFIG | jq -r '.ETag')
+            aws cloudfront update-distribution \
+              --id $DIST_ID \
+              --distribution-config file://infrastructure/cloudfront/update-distribution.json \
+              --if-match $ETAG
+          fi
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?contains(@, 'login.tokyoflo.com')]].Id" --output text)
+          aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*" 
