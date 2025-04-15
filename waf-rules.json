@@ -1,0 +1,65 @@
+[
+  {
+    "Name": "AWSManagedRulesCommonRuleSet",
+    "Priority": 1,
+    "OverrideAction": {"None": {}},
+    "Statement": {
+      "ManagedRuleGroupStatement": {
+        "VendorName": "AWS",
+        "Name": "AWSManagedRulesCommonRuleSet"
+      }
+    },
+    "VisibilityConfig": {
+      "SampledRequestsEnabled": true,
+      "CloudWatchMetricsEnabled": true,
+      "MetricName": "AWSManagedRulesCommonRuleSetMetric"
+    }
+  },
+  {
+    "Name": "RateLimitRule",
+    "Priority": 2,
+    "Action": {"Block": {}},
+    "Statement": {
+      "RateBasedStatement": {
+        "Limit": 2000,
+        "AggregateKeyType": "IP"
+      }
+    },
+    "VisibilityConfig": {
+      "SampledRequestsEnabled": true,
+      "CloudWatchMetricsEnabled": true,
+      "MetricName": "RateLimitRuleMetric"
+    }
+  },
+  {
+    "Name": "IPReputationList",
+    "Priority": 3,
+    "OverrideAction": {"None": {}},
+    "Statement": {
+      "ManagedRuleGroupStatement": {
+        "VendorName": "AWS",
+        "Name": "AWSManagedRulesAmazonIpReputationList"
+      }
+    },
+    "VisibilityConfig": {
+      "SampledRequestsEnabled": true,
+      "CloudWatchMetricsEnabled": true,
+      "MetricName": "IPReputationListMetric"
+    }
+  },
+  {
+    "Name": "GeoRestriction",
+    "Priority": 4,
+    "Action": {"Block": {}},
+    "Statement": {
+      "GeoMatchStatement": {
+        "CountryCodes": ["CN", "RU", "KP"]
+      }
+    },
+    "VisibilityConfig": {
+      "SampledRequestsEnabled": true,
+      "CloudWatchMetricsEnabled": true,
+      "MetricName": "GeoRestrictionMetric"
+    }
+  }
+] 
