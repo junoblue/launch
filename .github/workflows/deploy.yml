@@ -74,6 +74,10 @@ jobs:
           
       - name: Clean up and validate
         run: |
+          # Print current directory for debugging
+          pwd
+          ls -la
+          
           # Validate frontend directory
           if [ ! -d "frontend" ]; then
             echo "Error: frontend directory not found"
