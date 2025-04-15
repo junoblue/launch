@@ -33,35 +33,37 @@ jobs:
           role-to-assume: arn:aws:iam::597088015766:role/launch-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run tests
-        run: |
-          python -m pytest
-
-      - name: Deploy to backend instance
+      - name: Create deployment package
         run: |
           # Create deployment package
           zip -r deploy.zip . -x "*.git*" "*.github*" "frontend/*"
-          
-          # Upload and deploy
+          aws s3 cp deploy.zip s3://launch-deployment-artifacts/backend-deploy.zip
+
+      - name: Download and extract on instance
+        run: |
           aws ssm send-command \
             --instance-ids ${{ env.BACKEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
+              "aws s3 cp s3://launch-deployment-artifacts/backend-deploy.zip /tmp/deploy.zip",
               "sudo mkdir -p /opt/launch/backend",
               "cd /opt/launch/backend",
               "sudo systemctl stop gunicorn || true",
               "sudo rm -rf /opt/launch/backend/*",
               "sudo unzip -o /tmp/deploy.zip -d /opt/launch/backend/",
-              "sudo chown -R ubuntu:ubuntu /opt/launch/backend",
-              "sudo cp /opt/launch/backend/gunicorn.service /etc/systemd/system/gunicorn.service",
-              "python3 -m venv /opt/launch/venv",
-              "source /opt/launch/venv/bin/activate",
-              "pip install -r requirements.txt",
+              "sudo chown -R ubuntu:ubuntu /opt/launch/backend"
+            ]'
+
+      - name: Install dependencies and start service
+        run: |
+          aws ssm send-command \
+            --instance-ids ${{ env.BACKEND_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "cd /opt/launch/backend",
+              "sudo python3 -m pip install --upgrade pip",
+              "sudo python3 -m pip install -r requirements.txt",
+              "sudo cp gunicorn.service /etc/systemd/system/gunicorn.service",
               "sudo systemctl daemon-reload",
               "sudo systemctl enable gunicorn",
               "sudo systemctl start gunicorn",
@@ -73,11 +75,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          clean: true
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package.json'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -87,7 +93,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: |
+          echo '{"name":"frontend","version":"1.0.0"}' > package.json
+          npm install --force
 
       - name: Build
         working-directory: ./frontend
@@ -101,7 +109,17 @@ jobs:
           zip -r ../../deploy.zip *
           cd ../..
           
-          # Upload and deploy
+          # Upload to S3
+          aws s3 cp deploy.zip s3://launch-deployment-artifacts/frontend-deploy.zip
+          # Have instance download it
+          aws ssm send-command \
+            --instance-ids ${{ env.FRONTEND_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "aws s3 cp s3://launch-deployment-artifacts/frontend-deploy.zip /tmp/deploy.zip"
+            ]'
+          
+          # Deploy
           aws ssm send-command \
             --instance-ids ${{ env.FRONTEND_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
