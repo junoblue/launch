@@ -1,3 +1,36 @@
+# Launch Frontend
+
+This is the frontend application for Launch, built with React, TypeScript, and Vite.
+
+## Development
+
+To start the development server:
+
+```bash
+npm install
+npm run dev
+```
+
+## Testing
+
+Run the tests with:
+
+```bash
+npm test
+```
+
+## Building
+
+To build for production:
+
+```bash
+npm run build
+```
+
+## Deployment
+
+The application is automatically deployed through GitHub Actions when changes are pushed to the main branch.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
