@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationMenu } from '@radix-ui/react-navigation-menu';
+import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 
 interface ShellLayoutProps {
   children: React.ReactNode;
@@ -11,9 +11,9 @@ export const ShellLayout: React.FC<ShellLayoutProps> = ({ children }) => {
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
-          <NavigationMenu>
+          <NavigationMenu.Root>
             {/* Main Navigation Items */}
-            <div className="flex gap-6 md:gap-10">
+            <NavigationMenu.List className="flex gap-6 md:gap-10">
               {/* eCommerce Section */}
               <NavigationMenu.Item>
                 <NavigationMenu.Trigger className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
@@ -53,8 +53,8 @@ export const ShellLayout: React.FC<ShellLayoutProps> = ({ children }) => {
                   {/* Accounting Menu Items */}
                 </NavigationMenu.Content>
               </NavigationMenu.Item>
-            </div>
-          </NavigationMenu>
+            </NavigationMenu.List>
+          </NavigationMenu.Root>
 
           {/* User Menu */}
           <div className="ml-auto flex items-center space-x-4">
