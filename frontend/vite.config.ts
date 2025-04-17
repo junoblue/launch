@@ -46,4 +46,13 @@ export default defineConfig({
   },
   // Add support for .page files
   assetsInclude: ['**/*.page'],
+  // Test configuration
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/setupTests.ts'],
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 })
