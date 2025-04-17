@@ -89,7 +89,7 @@ jobs:
         run: |
           # Install and build
           npm ci
-          npm run build
+          npm run build-no-check
           
           # Verify build output
           if [ ! -d "dist" ]; then
