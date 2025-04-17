@@ -1,94 +1,50 @@
 /**
- * UILD (Unique Identifier with Logging and Discovery) implementation for frontend.
+ * UILD (Unique Identifier for Launch Data)
+ * Format: prefix_timestamp_random
+ * Example: tenant_1649836800000_a1b2c3
  */
-
 export class UILD {
-  private static PREFIX_MAP = {
+  private static readonly PREFIXES = {
     page: 'pg',
-    form: 'frm',
-    component: 'cmp',
-    element: 'elm',
-    modal: 'mdl',
-    widget: 'wgt',
-    section: 'sec',
-    layout: 'lyt'
+    component: 'cp',
+    action: 'ac',
+    tenant: 'tn',
+    user: 'us',
+    session: 'ss'
   } as const;
 
-  static generate(
-    prefixType: keyof typeof UILD.PREFIX_MAP,
-    metadata?: Record<string, unknown>
-  ): string {
-    if (!(prefixType in UILD.PREFIX_MAP)) {
-      throw new Error(`Invalid prefix type. Must be one of: ${Object.keys(UILD.PREFIX_MAP).join(', ')}`);
-    }
-
-    const prefix = UILD.PREFIX_MAP[prefixType];
-    const timestamp = Date.now().toString(16);
-    const random = Math.random().toString(16).slice(2, 10);
-    const base = `${prefix}-${timestamp}-${random}`;
+  static generate(type: keyof typeof this.PREFIXES, metadata: Record<string, any> = {}): string {
+    const prefix = this.PREFIXES[type];
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
     
-    // Generate checksum
-    const checksum = UILD.generateChecksum(base + (metadata ? JSON.stringify(metadata) : ''));
-    
-    return `${base}-${checksum}`;
+    return `${prefix}_${timestamp}_${random}`;
   }
 
-  static validate(uild: string): boolean {
-    try {
-      const [prefix, timestamp, random, checksum] = uild.split('-');
-      
-      // Validate prefix
-      if (!Object.values(UILD.PREFIX_MAP).includes(prefix as any)) {
-        return false;
-      }
-      
-      // Validate timestamp (hexadecimal)
-      if (!/^[0-9a-f]+$/.test(timestamp)) {
-        return false;
-      }
-      
-      // Validate random component (8 hex characters)
-      if (!/^[0-9a-f]{8}$/.test(random)) {
-        return false;
-      }
-      
-      // Validate checksum length
-      if (!/^[0-9a-f]{4}$/.test(checksum)) {
-        return false;
-      }
-      
-      return true;
-    } catch {
-      return false;
-    }
+  static isValid(uild: string): boolean {
+    const parts = uild.split('_');
+    if (parts.length !== 3) return false;
+
+    const [prefix, timestamp, random] = parts;
+    const validPrefix = Object.values(this.PREFIXES).includes(prefix);
+    const validTimestamp = !isNaN(Number(timestamp));
+    const validRandom = /^[a-z0-9]{6}$/.test(random);
+
+    return validPrefix && validTimestamp && validRandom;
   }
 
-  static getType(uild: string): keyof typeof UILD.PREFIX_MAP | null {
-    try {
-      const prefix = uild.split('-')[0];
-      const type = Object.entries(UILD.PREFIX_MAP).find(([_, value]) => value === prefix)?.[0];
-      return type as keyof typeof UILD.PREFIX_MAP || null;
-    } catch {
-      return null;
-    }
+  static getPrefix(uild: string): string | null {
+    if (!this.isValid(uild)) return null;
+    return uild.split('_')[0];
   }
 
   static getTimestamp(uild: string): number | null {
-    try {
-      const timestamp = uild.split('-')[1];
-      return parseInt(timestamp, 16);
-    } catch {
-      return null;
-    }
+    if (!this.isValid(uild)) return null;
+    return Number(uild.split('_')[1]);
   }
 
-  private static generateChecksum(input: string): string {
-    let hash = 0;
-    for (let i = 0; i < input.length; i++) {
-      const char = input.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16).slice(0, 4).padStart(4, '0');
+  static compare(a: string, b: string): number {
+    if (!this.isValid(a) || !this.isValid(b)) throw new Error('Invalid UILD');
+    return this.getTimestamp(a)! - this.getTimestamp(b)!;
   }
 } 

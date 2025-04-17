@@ -91,592 +91,659 @@ Distribution:
 
 ### Phase 1: Component Implementation Progress
 
-#### Navigation System
-The application now implements a navigation menu using Radix UI components:
-
-```typescript
-// Navigation Menu Implementation
-import * as NavigationMenu from '@radix-ui/react-navigation-menu';
-
-// Component Structure
-<NavigationMenu.Root>
-  <NavigationMenu.List>
-    <NavigationMenu.Item>
-      <NavigationMenu.Trigger>Section</NavigationMenu.Trigger>
-      <NavigationMenu.Content>Content</NavigationMenu.Content>
-    </NavigationMenu.Item>
-  </NavigationMenu.List>
-</NavigationMenu.Root>
-```
-
-Current navigation sections include:
-- eCommerce
-- CRM
-- ERP
-- Accounting
-
-#### Component Progress
+#### Completed Components
 ```yaml
-Implemented:
-  Templates:
-    - ShellLayout:
-        status: "Active"
-        features:
-          - Responsive navigation
-          - Sticky header
-          - Footer
-          - Content container
-        dependencies:
-          - "@radix-ui/react-navigation-menu": "^1.1.4"
-        styling:
-          - Tailwind CSS
-          - Custom transitions
-          - Backdrop blur effects
+Pages:
+  CRM:
+    status: "Active"
+    features:
+      - Basic layout structure
+      - Card-based sections
+      - UILD tracking
+      - Responsive grid
+      - Frame integration
+      - Lazy loading
+      - Error boundaries
+      - Loading states
+    sections:
+      - Contacts
+      - Leads
+      - Opportunities
+      - Recent Activities
 
-In Progress:
-  Atoms:
-    - Button
-    - Input
-    - Typography
-  Molecules:
-    - SearchBar
-    - FormField
-  Organisms:
-    - DataTable
-    - Forms
+  Dashboard:
+    status: "Active"
+    features:
+      - Quick stats widget
+      - UILD tracking
+      - Responsive layout
+      - Frame integration
+      - Lazy loading
+      - Error boundaries
+      - Loading states
+
+  eCommerce:
+    status: "Active"
+    features:
+      - Orders section
+      - Products section
+      - Customers section
+      - Analytics section
+      - UILD tracking
+      - Responsive grid
+      - Frame integration
+      - Lazy loading
+      - Error boundaries
+      - Loading states
+
+  ERP:
+    status: "Active"
+    features:
+      - Basic layout structure
+      - UILD tracking
+      - Responsive grid
+      - Frame integration
+      - Lazy loading
+      - Error boundaries
+      - Loading states
+    sections:
+      - Inventory
+      - Manufacturing
+      - Supply Chain
+      - Resources
+
+  Accounting:
+    status: "Active"
+    features:
+      - Basic layout structure
+      - UILD tracking
+      - Responsive grid
+      - Frame integration
+      - Lazy loading
+      - Error boundaries
+      - Loading states
+    sections:
+      - General Ledger
+      - Accounts Receivable
+      - Accounts Payable
+      - Reports
+
+  Global:
+    Dashboard:
+      status: "Active"
+      features:
+        - System status monitoring
+        - Tenant metrics
+        - Resource usage tracking
+        - Activity logs
+        - UILD tracking
+        - Frame integration
+        - Lazy loading
+        - Error boundaries
+        - Loading states
+    
+    Tenants:
+      status: "Active"
+      features:
+        - Tenant listing
+        - Status indicators
+        - User counts
+        - Creation dates
+        - Add tenant action
+        - UILD tracking
+        - Frame integration
+        - Lazy loading
+        - Error boundaries
+        - Loading states
+
+Templates:
+  Frame:
+    status: "Active"
+    features:
+      - Responsive layout
+      - Header integration
+      - Main content area
+      - Tenant-based access control
+      - UILD tracking
+      - Container management
+      - Consistent spacing
+      - Background styling
+      - Error boundaries
+      - Loading states
+    dependencies:
+      - "@radix-ui/react-navigation-menu"
+      - "lucide-react"
+    tracking:
+      - Layout UILD
+      - Header UILD
+      - Main section UILD
+      - Error UILD
+      - Loading UILD
+
+  ShellLayout:
+    status: "Active"
+    features:
+      - Consistent header
+      - Navigation menu
+      - Main content area
+      - Footer section
+      - Responsive design
+    dependencies:
+      - "@radix-ui/react-navigation-menu"
+    tracking:
+      - UILD implementation
+
+  SetupWizard:
+    status: "Active"
+    features:
+      - Multi-step setup flow
+      - Progress tracking
+      - UILD integration
+      - Tenant configuration
+    components:
+      - BrandingSetup
+      - TeamSetup
+      - FeatureConfig
+      - IntegrationSetup
+    tracking:
+      - Setup progress
+      - Feature toggles
+      - Team invites
+      - Branding changes
+
+Organisms:
+  Header:
+    status: "Active"
+    features:
+      - Logo display
+      - Navigation menu
+      - Search functionality
+      - User navigation
+    components:
+      - MainNav
+      - UserNav
+      - Search
+
+  SetupWizard:
+    status: "Active"
+    features:
+      - Step navigation
+      - Progress tracking
+      - Data persistence
+      - Action tracking
+    components:
+      - BrandingSetup
+      - TeamSetup
+      - FeatureConfig
+      - IntegrationSetup
+
+Molecules:
+  MainNav:
+    status: "Active"
+    features:
+      - Dynamic navigation links
+      - Active state tracking
+      - Admin/User mode switching
+  
+  UserNav:
+    status: "Active"
+    features:
+      - User avatar
+      - Dropdown menu
+      - Action shortcuts
+      - Logout functionality
+
+  Setup:
+    status: "Active"
+    features:
+      - Configuration cards
+      - Status tracking
+      - Action buttons
+      - Progress indicators
+    components:
+      - BrandingSetup
+      - TeamSetup
+      - FeatureConfig
+
+Atoms:
+  Avatar:
+    status: "Active"
+    features:
+      - Image support
+      - Fallback display
+      - Size variants
+  
+  Button:
+    status: "Active"
+    features:
+      - Multiple variants
+      - Size options
+      - Icon support
+  
+  DropdownMenu:
+    status: "Active"
+    features:
+      - Nested menus
+      - Keyboard navigation
+      - Custom triggers
+
+  Input:
+    status: "Active"
+    features:
+      - Text input
+      - Search variant
+      - Error states
 ```
 
-### Infrastructure Status
-Current infrastructure status and completed steps:
+#### Authentication Implementation
+```yaml
+Completed:
+  - Authentication context
+  - Protected routes
+  - Login page implementation
+  - Route guards
+  - Session management
+  - Two-layer access control:
+    - Layer 1: Tenant-based routing (initial login)
+    - Layer 2: Role-based access control (within tenant)
+  - UILD tracking
+  - API client implementation
+  - Token management
 
-1. CloudFront Configuration ✓
-   - [x] Multiple origins configured
-   - [x] Custom headers for origin verification
-   - [x] Path-based routing established
-   - [x] SSL/TLS configuration complete
-   - [x] Default origin set to EC2
+Features:
+  Access Control System:
+    - Tenant-based initial routing:
+      - Determines environment/instance access
+      - Based on tenant UILD prefix
+      - Handles subdomain routing
+      - Controls initial redirect
+    
+    - Role-based permissions:
+      - Controls feature access within tenant
+      - Permission matrix per role
+      - Feature-level access control
+      - Module access management
+  
+  Login System:
+    - Email/password authentication
+    - Tenant identification
+    - Role verification
+    - Loading states
+    - Error handling
+    - Token storage
+    - UILD tracking
 
-2. EC2 Setup
-   - [x] Instance launched in private subnet
-   - [x] Security groups configured
-   - [x] IAM roles assigned
-   - [ ] nginx configuration
-   - [ ] Health check endpoint
-   - [ ] Static file serving
+Development Environment:
+  Configuration:
+    Service: Production Auth API
+    Status: "Active"
+    Test Accounts:
+      Samurai Tenant:
+        Email: admin@tokyoflo.com
+        Access: 
+          Tenant: Samurai tenant environment
+          Roles: ["global-admin", "tenant-admin"]
+          Features: All features
+      Regular Tenant:
+        Email: user@demo.tokyoflo.com
+        Access:
+          Tenant: Demo tenant environment
+          Roles: ["tenant-user"]
+          Features: Based on subscription
+```
+
+#### Routing Structure
+```typescript
+// Route Structure (Updated)
+src/routes/
+  ├── index.tsx              # Main router configuration with React Router v7 features
+  ├── types.ts              # Route type definitions
+  └── guards/               # Route protection utilities
+      └── ProtectedRoute.tsx
+
+// Route Organization (Current Implementation)
+{
+  auth: {
+    "/login": "Login page with UILD tracking and error handling"
+  },
+  common: {
+    "/dashboard": "Main dashboard with lazy loading",
+    "/modules": {
+      "/ecommerce": "eCommerce section with lazy loading",
+      "/crm": "CRM section with lazy loading",
+      "/erp": "ERP section with lazy loading",
+      "/accounting": "Accounting section with lazy loading"
+    }
+  },
+  global: {
+    "/dashboard": "Global admin dashboard with lazy loading",
+    "/tenants": "Tenant management with lazy loading"
+  }
+}
+
+// Route Features (Updated)
+- React Router v7 features enabled
+- Lazy loading for all pages
+- Route-based code splitting
+- Authentication guards with role checks
+- Role-based access control
+- Layout integration (Frame template)
+- UILD tracking on all pages
+- Error boundaries with retry mechanism
+- Loading states with UILD tracking
+- Cache control headers
+- Browser cache management
+- Subdomain-based routing
+- Development mode handling
+```
+
+### Development Progress
+
+#### Completed
+- [x] Basic project structure
+- [x] Component directory organization (Atomic Design)
+- [x] Authentication system
+  - [x] Login form functionality
+  - [x] Session management
+  - [x] Protected route guards
+  - [x] API client
+  - [x] Role-based access
+  - [x] Subdomain routing
+- [x] Basic page components created and enhanced:
+  - [x] Login page (auth/login.page.tsx)
+  - [x] Common pages:
+    - [x] Dashboard with lazy loading
+    - [x] eCommerce with lazy loading
+    - [x] CRM with lazy loading
+    - [x] ERP with lazy loading
+    - [x] Accounting with lazy loading
+  - [x] Global admin pages:
+    - [x] Dashboard with lazy loading
+    - [x] Tenants list with lazy loading
+- [x] UILD tracking implementation
+- [x] Development environment setup
+- [x] Path aliasing configuration
+- [x] File naming conventions established
+- [x] Error boundaries implementation
+- [x] Loading states with UILD tracking
+- [x] React Router v7 configuration
+- [x] Cache control implementation
+
+#### In Progress
+- [ ] Component library integration
+  - [ ] shadcn/ui setup
+  - [ ] Tailwind configuration
+  - [ ] Radix UI components
+
+#### Pending
+- [ ] User registration flow
+- [ ] Password recovery system
+- [ ] Tenant management system
+- [ ] Real-time updates
+- [ ] API integration
+- [ ] Production deployment
+- [ ] Testing implementation
+- [ ] Documentation completion
 
 ### Next Steps (Prioritized)
-1. [ ] Complete nginx configuration on EC2
-   - Configure static file serving
-   - Set up health check endpoint
-   - Configure logging and monitoring
-   - Implement cache headers
+1. [ ] Complete route configuration
+   - [ ] Update index.tsx with all routes
+   - [ ] Implement route guards
+   - [ ] Set up subdomain routing
+   - [ ] Add error boundaries
 
-2. [ ] Validate EC2 Setup
-   - Test static file serving
-   - Verify health checks
-   - Check CloudFront integration
-   - Monitor performance metrics
+2. [ ] Implement authentication
+   - [ ] Connect login form to API
+   - [ ] Add session management
+   - [ ] Implement protected routes
+   - [ ] Add authentication context
 
-3. [ ] Optimize CloudFront Configuration
-   - Fine-tune cache behaviors
-   - Test failover scenarios
-   - Monitor performance metrics
-   - Set up real-time monitoring
+3. [ ] Set up component library
+   - [ ] Install and configure shadcn/ui
+   - [ ] Create shared components
+   - [ ] Implement design system
+   - [ ] Add component documentation
 
-### Implementation Plan
+4. [ ] Testing and Documentation
+   - [ ] Set up testing framework
+   - [ ] Write component tests
+   - [ ] Complete documentation
+   - [ ] Add usage examples
 
-#### Phase 1: Project Setup and Dependencies
+### Local Development
 ```yaml
-Framework: React 18
-Build Tool: Vite
-Language: TypeScript
-UI Libraries:
-  - shadcn/ui
-  - Tailwind CSS
-  - Radix UI (via shadcn)
-Development Tools:
-  - ESLint
-  - Prettier
-  - Husky (Git hooks)
-  - TypeScript strict mode
+Environment:
+  Framework: Vite
+  Port: 5173
+  Hot Reload: Enabled
+  UILD Tracking: Active
+
+Configuration:
+  Authentication:
+    Type: Production Auth API
+    Endpoints:
+      - /api/auth/login
+      - /api/auth/logout
+      - /api/users/me
+      - /api/tenants
+    Test Accounts:
+      Samurai Tenant:
+        Email: admin@tokyoflo.com
+        Access: Tenant management interface
+      Regular Tenant:
+        Email: user@demo.tokyoflo.com
+        Access: Standard tenant interface
+  API Endpoints: Production
+  Assets: Local
+  Environment: Development
+
+Access:
+  URL: http://localhost:5173
+  Routes:
+    - / (Login)
+    - /setup
+    - /app/* (Protected)
+    - /admin/* (Protected)
 ```
 
-#### Phase 2: Atomic Design Implementation
+### File Structure and Route Components
+
 ```typescript
-// 1. Atoms (Base Components)
-src/components/atoms/
-  ├── Button/
-  │   ├── Button.tsx
-  │   ├── Button.test.tsx
-  │   └── Button.stories.tsx
-  ├── Input/
-  │   ├── Input.tsx
-  │   └── types.ts
-  ├── Typography/
-  │   ├── Text.tsx
-  │   ├── Heading.tsx
-  │   └── types.ts
-  └── Icon/
-      ├── Icon.tsx
-      └── IconRegistry.ts
+src/
+├── components/
+│   ├── atoms/
+│   │   ├── Button/
+│   │   ├── Input/
+│   │   └── Avatar/
+│   ├── molecules/
+│   │   ├── MainNav/
+│   │   └── UserNav/
+│   ├── organisms/
+│   │   └── Header/
+│   └── templates/
+│       └── Frame/
+│           ├── Frame.tsx
+│           └── index.tsx
+└── pages/
+    ├── auth/
+    │   └── login.page.tsx        # Authentication routes
+    ├── common/                   # Default routes for all tenants
+    │   ├── dashboard/
+    │   │   └── dashboard.page.tsx
+    │   └── modules/             # Module routes available based on tenant subscription
+    │       ├── ecommerce/
+    │       │   └── ecommerce.page.tsx
+    │       ├── crm/
+    │       │   └── crm.page.tsx
+    │       ├── erp/
+    │       │   └── erp.page.tsx
+    │       └── accounting/
+    │           └── accounting.page.tsx
+    └── global/                  # Routes only accessible to Samurai tenant (UILD-based access)
+        ├── dashboard/
+        │   └── global.dashboard.page.tsx
+        └── tenants/
+            └── global.tenants.list.page.tsx
 
-// 2. Molecules (Composite Components)
-src/components/molecules/
-  ├── SearchBar/
-  │   ├── SearchBar.tsx
-  │   ├── SearchBar.test.tsx
-  │   └── types.ts
-  ├── FormField/
-  │   ├── FormField.tsx
-  │   └── types.ts
-  ├── NavigationLink/
-  │   ├── NavigationLink.tsx
-  │   └── types.ts
-  └── Setup/
-      ├── Setup.tsx
-      └── types.ts
-
-// 3. Organisms (Complex Components)
-src/components/organisms/
-  ├── DataTable/
-  │   ├── DataTable.tsx
-  │   ├── Pagination.tsx
-  │   └── types.ts
-  ├── NavigationMenu/
-  │   ├── NavigationMenu.tsx
-  │   └── types.ts
-  └── Forms/
-      ├── LoginForm.tsx
-      └── types.ts
-
-// 4. Templates (Page Layouts)
-src/components/templates/
-  ├── Frame/
-  │   ├── Frame.tsx            # Base layout with header and main content
-  │   └── types.ts            # Frame component types
-  ├── AuthLayout/
-  │   ├── AuthLayout.tsx      # Layout for authentication pages
-  │   └── types.ts
-  └── AdminLayout/
-      ├── AdminLayout.tsx     # Layout for admin pages
-      └── types.ts
-
-// Frame Template Structure
-interface FrameProps {
-  children: React.ReactNode    // Main content
-  isGlobalAdmin?: boolean     // Toggle admin-specific UI
-  className?: string         // Additional styling
-  uild?: string             // Unique identifier for tracking
-}
-
-// Component Hierarchy
-Frame/
-  ├── Header (Organism)
-  │   ├── Logo
-  │   ├── MainNav (Molecule)
-  │   │   └── Navigation Links
-  │   ├── Search
-  │   └── UserNav (Molecule)
-  │       └── User Dropdown
-  └── Main Content
-      └── Container with spacing
-
-// 5. Pages (Route Components)
-src/pages/
-  ├── auth/
-  │   ├── login.tsx
-  │   └── register.tsx
-  ├── dashboard/
-  │   ├── index.tsx
-  │   └── settings.tsx
-  ├── setup/
-  │   └── index.tsx
-  └── admin/
-      ├── users.tsx
-      └── tenants.tsx
 ```
 
-#### Phase 3: Theme System
-```typescript
-// Theme Configuration
-src/styles/
-  ├── theme/
-  │   ├── colors.ts
-  │   ├── typography.ts
-  │   ├── spacing.ts
-  │   └── breakpoints.ts
-  └── shadcn/
-      ├── button.ts
-      ├── input.ts
-      └── card.ts
+### Routing and Access Control
 
-// Multi-tenant Theming
-interface TenantTheme {
-  primary: string;
-  secondary: string;
-  accent: string;
-  background: string;
-  text: string;
-  brandColors: {
-    [key: string]: string;
-  };
-  typography: {
-    fontFamily: string;
-    scale: Record<string, string>;
-  };
-}
+1. **Initial Tenant-Based Routing**
+   - Determines which environment/instance user can access
+   - Based on tenant UILD prefix during login
+   - Controls initial routing and subdomain access
+   - Example: Samurai tenants route to admin dashboard
 
-// Theme Provider
-const ThemeProvider: FC<{
-  tenant: string;
-  theme: TenantTheme;
-  children: ReactNode;
-}>;
-```
+2. **Role-Based Access Control**
+   - Controls feature access within tenant environment
+   - Based on user roles and permissions
+   - Granular control over module access
+   - Permission matrix defines allowed actions
 
-#### Phase 4: State Management
-```typescript
-// Global State (Zustand)
-interface GlobalState {
-  tenant: TenantConfig;
-  user: UserProfile;
-  theme: ThemeConfig;
-  settings: AppSettings;
-}
+3. **Common Routes** (`/common/*`)
+   - Available to authenticated users with appropriate roles
+   - Module access determined by role permissions
+   - Feature access controlled by permission matrix
 
-// API Integration (React Query)
-src/api/
-  ├── hooks/
-  │   ├── useUser.ts
-  │   ├── useTenant.ts
-  │   └── useSettings.ts
-  └── mutations/
-      ├── useUpdateUser.ts
-      ├── useUpdateTenant.ts
-      └── useUpdateSettings.ts
-```
+4. **Management Routes** (`/tenants/*`)
+   - Requires both Samurai tenant and admin role
+   - Used for tenant management and settings
+   - Access controlled by both tenant type and role
 
-### Development Guidelines
+5. **Authentication Routes** (`/auth/*`)
+   - Public routes for login/logout
+   - Handles tenant identification
+   - Initiates role verification
+   - Manages appropriate redirects
 
-#### 1. Component Structure
-```typescript
-// Component Template
-interface ComponentProps {
-  // Props with TypeScript types
-}
+### Tenant Routing
 
-const Component: FC<ComponentProps> = ({
-  // Destructured props
-}) => {
-  // Component logic
-  return (
-    // JSX with Tailwind classes
-  );
-};
+- Samurai tenant: Identified by tenant UILD prefix
+- Other tenants: Identified by their tenant UILD
+- Development: Configurable via environment variables
 
-// Export with displayName
-Component.displayName = 'Component';
-export default Component;
-```
+### Implementation Notes
 
-#### 2. Testing Strategy
+- Access control is based on tenant UILD
+- Module access determined by tenant subscription status
+- All routes use lazy loading for optimal performance
+- Each page component includes its own UILD tracking
+- Tenant isolation through UILD-based boundaries
+
+### Development Authentication Implementation
 ```yaml
-Unit Tests:
-  - Jest
-  - React Testing Library
-  - MSW for API mocking
-  
-Integration Tests:
-  - Cypress
-  - Component testing
-  - E2E flows
+Mock Service Worker (MSW):
+  Status: "Active"
+  Purpose: "Development-only authentication simulation"
+  Implementation:
+    Handlers:
+      - /api/auth/login:
+          Method: POST
+          Features:
+            - Email validation
+            - Mock token generation
+            - Role assignment
+            - UILD generation for session
+            - Tenant type determination
+      - /api/auth/logout:
+          Method: POST
+          Features:
+            - Token removal
+            - Session cleanup
+      - /api/users/me:
+          Method: GET
+          Features:
+            - User profile simulation
+            - Role verification
+            - Tenant access validation
+      - /api/tenants:
+          Method: GET
+          Features:
+            - Tenant data simulation
+            - Subscription status
+            - Feature access control
 
-Visual Testing:
-  - Storybook
-  - Visual regression
-  - Accessibility checks
+  Mock Data Structure:
+    Users:
+      Admin:
+        Email: "admin@tokyoflo.com"
+        Password: "any (development only)"
+        Tenant:
+          Type: "samurai"
+          UILD: "67e55044-10b1-426f-9247-bb680e5fe0c8"
+        Roles: ["global-admin", "tenant-admin"]
+        Features: ["*"]
+        UILDs:
+          Session: "session_{timestamp}_{random}"
+          User: "user_{timestamp}_{random}"
+          
+      Demo:
+        Email: "user@demo.tokyoflo.com"
+        Password: "any (development only)"
+        Tenant:
+          Type: "regular"
+          UILD: "tn_{timestamp}_regular_{random}"
+        Roles: ["tenant-user"]
+        Features: ["dashboard", "crm", "erp"]
+        UILDs:
+          Session: "session_{timestamp}_{random}"
+          User: "user_{timestamp}_{random}"
+
+  Authentication Flow:
+    1. Login Request:
+       - Validate email format
+       - Generate mock tenant UILD
+       - Create mock user profile
+       - Generate session UILD
+       - Set mock tokens
+    
+    2. Session Management:
+       - Store mock token in localStorage
+       - Store user profile with UILDs
+       - Track session duration
+       - Handle token refresh
+    
+    3. Request Interception:
+       - Intercept API requests
+       - Validate mock tokens
+       - Check permissions
+       - Generate appropriate responses
+    
+    4. Error Simulation:
+       - Network errors
+       - Authentication failures
+       - Permission denials
+       - Token expiration
+
+  Development Features:
+    UILD Tracking:
+      - Generate unique UILDs for all entities
+      - Track user interactions
+      - Monitor page navigation
+      - Log authentication events
+    
+    Hot Reload:
+      - Preserve authentication state
+      - Maintain session data
+      - Keep mock tokens valid
+    
+    Debug Tools:
+      - Console logging
+      - State inspection
+      - Error monitoring
+      - Performance tracking
+
+  Testing Scenarios:
+    Admin Flow:
+      1. Login as admin@tokyoflo.com
+      2. Access global dashboard
+      3. Manage tenants
+      4. Access all features
+    
+    User Flow:
+      1. Login as user@demo.tokyoflo.com
+      2. Access tenant dashboard
+      3. Use permitted modules
+      4. Test feature restrictions
 ```
-
-#### 3. Performance Optimization
-```typescript
-// Code Splitting
-const DynamicComponent = dynamic(() => import('./Component'), {
-  loading: () => <Skeleton />,
-  ssr: false
-});
-
-// Performance Monitoring
-interface PerformanceMetrics {
-  FCP: number;  // First Contentful Paint
-  LCP: number;  // Largest Contentful Paint
-  TTI: number;  // Time to Interactive
-  TBT: number;  // Total Blocking Time
-}
-```
-
-### Success Criteria
-
-#### Technical Requirements
-```yaml
-Performance:
-  - First Contentful Paint: < 1.5s
-  - Time to Interactive: < 3.5s
-  - Lighthouse Score: > 90
-  - Bundle Size: < 250KB (initial)
-
-Code Quality:
-  - Test Coverage: > 80%
-  - TypeScript Strict: Enabled
-  - Zero ESLint Errors
-  - Documented Components
-
-Accessibility:
-  - WCAG 2.1 Compliant
-  - Keyboard Navigation
-  - Screen Reader Support
-  - Color Contrast: WCAG AAA
-```
-
-#### Implementation Checklist
-```yaml
-Phase 1:
-  - [ ] Project scaffolding
-  - [ ] Dependencies setup
-  - [ ] Build configuration
-  - [ ] Development tooling
-
-Phase 2:
-  - [ ] Atomic components
-  - [ ] Component documentation
-  - [ ] Unit tests
-  - [ ] Storybook setup
-
-Phase 3:
-  - [ ] Theme system
-  - [ ] Multi-tenant support
-  - [ ] Design tokens
-  - [ ] Style guidelines
-
-Phase 4:
-  - [ ] State management
-  - [ ] API integration
-  - [ ] Performance optimization
-  - [ ] Deployment pipeline
-```
-
-## Core Components
-
-### 1. Atomic Design Structure
-- **Atoms**
-  ```tsx
-  // Button Atom Example
-  interface ButtonProps {
-    variant: 'primary' | 'secondary' | 'ghost';
-    size: 'sm' | 'md' | 'lg';
-    tenantTheme?: TenantThemeConfig;
-    uildId: UILD;  // For tracking and analytics
-  }
-  ```
-
-- **Molecules**
-  ```tsx
-  // SearchBar Molecule Example
-  interface SearchBarProps {
-    onSearch: (query: string) => void;
-    placeholder: string;
-    filters?: FilterConfig[];
-    tenantId: UILD;
-  }
-  ```
-
-- **Organisms**
-  ```tsx
-  // DataTable Organism Example
-  interface DataTableProps<T> {
-    data: T[];
-    columns: ColumnConfig[];
-    pagination: PaginationConfig;
-    sorting: SortingConfig;
-    tenantCustomizations: TenantUIConfig;
-  }
-  ```
-
-- **Templates**
-  ```tsx
-  // Dashboard Template Example
-  interface DashboardTemplateProps {
-    layout: 'default' | 'compact' | 'custom';
-    sidebar: SidebarConfig;
-    header: HeaderConfig;
-    tenantBranding: TenantBrandingConfig;
-  }
-  ```
-
-### 2. Theme Integration
-- **Base Theme Configuration**
-  ```typescript
-  interface ThemeConfig {
-    colors: {
-      primary: string;
-      secondary: string;
-      accent: string;
-      background: string;
-      text: string;
-    };
-    typography: {
-      fontFamily: string;
-      scale: Record<string, string>;
-    };
-    spacing: Record<string, string>;
-    breakpoints: Record<string, number>;
-    shadows: Record<string, string>;
-  }
-  ```
-
-### 3. Multi-tenant UI System
-- **Tenant Configuration**
-  ```typescript
-  interface TenantUIConfig {
-    theme: ThemeConfig;
-    layout: LayoutConfig;
-    features: FeatureFlags;
-    branding: {
-      logo: string;
-      favicon: string;
-      colors: BrandColors;
-    };
-    customCSS?: string;
-  }
-  ```
-
-### 4. Component Library Integration
-```typescript
-// Component Registry
-interface ComponentRegistry {
-  atoms: Record<string, AtomicComponent>;
-  molecules: Record<string, MolecularComponent>;
-  organisms: Record<string, OrganismComponent>;
-  templates: Record<string, TemplateComponent>;
-}
-```
-
-## Implementation Steps
-
-### Layer-03 Phase-01: Foundation Setup
-- [x] Initialize React project with TypeScript
-- [x] Configure build system (Vite)
-- [x] Set up testing framework (Vitest)
-- [x] Establish code quality tools (ESLint/Prettier)
-- [x] Configure CI/CD pipeline
-- [x] Implement base layout template
-
-### Layer-03 Phase-02: Atomic Design System
-- [x] Create atomic component structure
-- [x] Set up navigation system
-- [ ] Implement base atoms
-- [ ] Build core molecules
-- [ ] Develop key organisms
-- [x] Design template layouts
-
-### Layer-03 Phase-03: Theme Integration
-- [ ] Set up shadcn configuration
-- [ ] Integrate Material UI components
-- [ ] Create theme provider
-- [ ] Implement theme switching
-- [ ] Build tenant theme manager
-
-### Layer-03 Phase-04: Multi-tenant UI System
-- [ ] Develop tenant configuration system
-- [ ] Create tenant-aware components
-- [ ] Implement tenant isolation
-- [ ] Build tenant customization UI
-- [ ] Set up tenant analytics
-
-### Layer-03 Phase-05: State Management
-- [ ] Configure global state management
-- [ ] Implement tenant state handling
-- [ ] Set up caching strategy
-- [ ] Create state persistence
-- [ ] Build state synchronization
-
-### Layer-03 Phase-06: Performance Optimization
-- [ ] Implement code splitting
-- [ ] Set up lazy loading
-- [ ] Configure caching
-- [ ] Optimize bundle size
-- [ ] Implement performance monitoring
-
-## Success Criteria
-
-### Performance Metrics
-- [ ] First Contentful Paint < 1.5s
-- [ ] Time to Interactive < 3.5s
-- [ ] Lighthouse score > 90
-- [ ] Bundle size < 250KB (initial load)
-- [ ] Zero tenant-specific memory leaks
-
-### UI/UX Metrics
-- [ ] Component reusability > 80%
-- [ ] Design system coverage > 95%
-- [ ] Accessibility score > 95
-- [ ] Cross-browser compatibility 100%
-- [ ] Responsive design verification
-
-## Dependencies
-- React 18+
-- shadcn/ui
-- Material UI
-- TypeScript 5+
-- Emotion/styled-components
-- React Query/SWR
-
-## Security Measures
-- XSS prevention
-- CSRF protection
-- Content Security Policy
-- Tenant data isolation
-- Input sanitization
-
-## Performance Optimizations
-- **Component Level**
-  - Memoization
-  - Code splitting
-  - Tree shaking
-  - Virtual scrolling
-  - Lazy loading
-
-- **Asset Level**
-  - Image optimization
-  - Font subsetting
-  - CSS optimization
-  - Bundle splitting
-  - Resource hints
-
-## Monitoring and Analytics
-- **Performance Metrics**
-  - Core Web Vitals
-  - Custom metrics
-  - Error tracking
-  - User flows
-  - Resource timing
-
-- **User Analytics**
-  - Interaction tracking
-  - Feature usage
-  - Error reporting
-  - Performance monitoring
-  - A/B testing
-
-## Testing Strategy
-1. Unit tests (Jest)
-2. Integration tests (Testing Library)
-3. E2E tests (Cypress)
-4. Visual regression tests
-5. Accessibility tests
-
-## Documentation Requirements
-1. Component documentation
-2. Theme customization guide
-3. Tenant configuration guide
-4. Performance guidelines
-5. Security best practices 

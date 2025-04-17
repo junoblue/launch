@@ -1,0 +1,32 @@
+import * as React from "react"
+import { UILD } from "@/lib/uild"
+import { Frame } from "@/components/templates/Frame"
+
+const AccountingPage: React.FC = () => {
+  const pageUild = UILD.generate("page", { type: "accounting" })
+
+  return (
+    <Frame uild={pageUild}>
+      <h1 className="text-2xl font-bold mb-6">Accounting</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">General Ledger</h2>
+          <p className="text-gray-600">Manage your accounts and transactions</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Accounts Receivable</h2>
+          <p className="text-gray-600">Track customer payments and invoices</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Accounts Payable</h2>
+          <p className="text-gray-600">Manage vendor bills and payments</p>
+        </div>
+      </div>
+    </Frame>
+  )
+}
+
+export default AccountingPage 

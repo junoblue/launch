@@ -1,0 +1,32 @@
+import * as React from "react"
+import { UILD } from "@/lib/uild"
+import { Frame } from "@/components/templates/Frame"
+
+const CRMPage: React.FC = () => {
+  const pageUild = UILD.generate("page", { type: "crm" })
+
+  return (
+    <Frame uild={pageUild}>
+      <h1 className="text-2xl font-bold mb-6">Customer Relationship Management</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Contacts</h2>
+          <p className="text-gray-600">Manage your business contacts</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Leads</h2>
+          <p className="text-gray-600">Track and convert potential customers</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Opportunities</h2>
+          <p className="text-gray-600">Monitor sales pipeline and deals</p>
+        </div>
+      </div>
+    </Frame>
+  )
+}
+
+export default CRMPage 

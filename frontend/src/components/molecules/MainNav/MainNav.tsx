@@ -13,53 +13,78 @@ export function MainNav({ isGlobalAdmin = false, className, uild }: MainNavProps
   const location = useLocation()
   const navUild = UILD.generate("component", { type: "navigation" })
 
-  const regularItems = [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-    },
-    {
-      title: "eCommerce",
-      href: "/ecommerce",
-    },
-    {
-      title: "CRM",
-      href: "/crm",
-    },
-    {
-      title: "ERP",
-      href: "/erp",
-    },
-    {
-      title: "Accounting",
-      href: "/accounting",
-    },
-  ]
+  // Memoize the items array to prevent unnecessary re-renders
+  const items = React.useMemo(() => {
+    const regularItems = [
+      {
+        title: "Dashboard",
+        href: "/dashboard",
+      },
+      {
+        title: "eCommerce",
+        href: "/ecommerce",
+        items: [
+          { title: "Products", href: "/ecommerce/products" },
+          { title: "Orders", href: "/ecommerce/orders" },
+          { title: "Customers", href: "/ecommerce/customers" }
+        ]
+      },
+      {
+        title: "CRM",
+        href: "/crm",
+        items: [
+          { title: "Analytics", href: "/crm/dashboard" },
+          { title: "Accounts", href: "/crm/accounts" }
+        ]
+      },
+      {
+        title: "ERP",
+        href: "/erp",
+        items: [
+          { title: "Inventory", href: "/erp/inventory" },
+          { title: "Suppliers", href: "/erp/suppliers" }
+        ]
+      },
+      {
+        title: "Accounting",
+        href: "/accounting",
+        items: [
+          { title: "Transactions", href: "/accounting/transactions" },
+          { title: "Reports", href: "/accounting/reports" }
+        ]
+      }
+    ]
 
-  const adminItems = [
-    {
-      title: "Overview",
-      href: "/admin/dashboard",
-    },
-    {
-      title: "Tenants",
-      href: "/admin/tenants",
-    },
-    {
-      title: "Users",
-      href: "/admin/users",
-    },
-    {
-      title: "Infrastructure",
-      href: "/admin/infrastructure",
-    },
-    {
-      title: "Settings",
-      href: "/admin/settings",
-    },
-  ]
+    const adminItems = [
+      {
+        title: "Overview",
+        href: "/dashboard",
+      },
+      {
+        title: "Tenants",
+        href: "/tenants",
+      },
+      {
+        title: "Users",
+        href: "/users",
+      },
+      {
+        title: "Infrastructure",
+        href: "/infrastructure",
+      },
+      {
+        title: "Settings",
+        href: "/settings",
+      },
+    ]
 
-  const items = isGlobalAdmin ? adminItems : regularItems
+    return isGlobalAdmin ? adminItems : regularItems
+  }, [isGlobalAdmin])
+
+  // Memoize the active state check to prevent unnecessary re-renders
+  const isActive = React.useCallback((href: string) => {
+    return location.pathname === href || location.pathname.startsWith(href + '/')
+  }, [location.pathname])
 
   return (
     <nav
@@ -67,18 +92,36 @@ export function MainNav({ isGlobalAdmin = false, className, uild }: MainNavProps
       data-uild={uild || navUild}
     >
       {items.map((item) => (
-        <Link
-          key={item.href}
-          to={item.href}
-          className={cn(
-            "text-sm font-medium transition-colors hover:text-primary",
-            location.pathname === item.href
-              ? "text-primary"
-              : "text-muted-foreground"
+        <div key={item.href} className="relative group">
+          <Link
+            to={item.href}
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              isActive(item.href) ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            {item.title}
+          </Link>
+          
+          {item.items && (
+            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-popover hidden group-hover:block">
+              <div className="rounded-md ring-1 ring-black ring-opacity-5 py-1">
+                {item.items.map((subItem) => (
+                  <Link
+                    key={subItem.href}
+                    to={subItem.href}
+                    className={cn(
+                      "block px-4 py-2 text-sm transition-colors hover:bg-accent",
+                      isActive(subItem.href) ? "text-primary" : "text-muted-foreground"
+                    )}
+                  >
+                    {subItem.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
-        >
-          {item.title}
-        </Link>
+        </div>
       ))}
     </nav>
   )
