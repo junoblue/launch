@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Search } from "lucide-react"
-import { Input } from "@/components/atoms/Input"
+import { Input } from "@/components/ui/input"
 import { UserNav } from "@/components/molecules/UserNav"
 import { MainNav } from "@/components/molecules/MainNav"
 import { UILD } from "@/lib/uild"

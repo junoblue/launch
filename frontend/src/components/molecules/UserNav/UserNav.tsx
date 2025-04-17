@@ -30,10 +30,10 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/atoms/DropdownMenu"
+} from "@/components/ui/dropdown-menu"
 
-import { Button } from "@/components/atoms/Button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/atoms/Avatar"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UILD } from "@/lib/uild"
 
 interface UserNavProps {
