@@ -49,7 +49,7 @@ jobs:
       - name: Run backend tests
         working-directory: ./backend
         run: |
-          python -m pytest tests/
+          PYTHONPATH=$PYTHONPATH:$(pwd) python -m pytest tests/
         
       - name: Run frontend tests
         working-directory: ./frontend
