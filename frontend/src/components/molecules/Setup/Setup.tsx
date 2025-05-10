@@ -2,7 +2,7 @@ import * as React from "react"
 import { Settings, Database, Cloud, Users, Key } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { UILD } from "@/lib/uild"
-import { Button } from "@/components/atoms/Button"
+import { Button } from "@/components/ui/button"
 
 interface SetupItem {
   title: string
